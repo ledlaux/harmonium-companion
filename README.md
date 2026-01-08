@@ -6,8 +6,6 @@ Web browser digital harmonium instrument
 ---
 
 ## 🛠 Features
-
-## 🛠 Features
 * **Manual Bellows**: Real-time air reservoir simulation (requires pumping for sound).
 * **Raga Filters**: Color-coded highlighting for 12+ Ragas/Thaats (Morning, Evening, Night).
 * **Dual Notation**: Toggle between **Sargam** (Sa, Re, Ga) and Western labels.
