@@ -32,7 +32,7 @@ Web browser digital harmonium instrument
 * **Core**: [Tone.js](https://tonejs.github.io/) for Web Audio synthesis.
 * **Graphics**: HTML5 Canvas for waveform visualization.
 * **Samples**: recorded harmonium samples by
-* https://github.com/rtalwar26/midi-harmonium
+   github.com/rtalwar26/midi-harmonium
 
 ---
 
