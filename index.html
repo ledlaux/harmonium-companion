@@ -36,12 +36,15 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bytes & Bellows - Harmonium Companion</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Montserrat:wght@300;400;600&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --ivory-key: linear-gradient(180deg, #fdf5e6 0%, #f0e4d0 100%);
@@ -54,549 +57,914 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             --led-on: #d4af37;
         }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             background-image: url('images/background.png');
-            background-size: cover; background-position: center;
-            background-attachment: fixed; background-color: #0b0805;
-            display: flex; justify-content: center; align-items: center; 
-            overflow: hidden; font-family: 'Montserrat', sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: #0b0805;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
         }
 
         #overlay {
-            position: fixed; inset: 0; background: rgba(10, 7, 5, 0.98);
-            display: flex; justify-content: center; align-items: center; z-index: 5000;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 7, 5, 0.98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
         }
 
         #start-btn {
-            padding: 25px 80px; background: transparent; color: var(--gold);
-            border: 1px solid var(--gold); cursor: pointer; font-size: 1.5rem;
-            letter-spacing: 5px; text-transform: uppercase;
+            padding: 25px 80px;
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            cursor: pointer;
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
         }
 
         .zoom-viewport {
-            position: relative; width: 800px; 
-            transform: scale(1.5) translateY(5%); transform-origin: center center;
+            position: relative;
+            width: 800px;
+            transform: scale(1.5) translateY(5%);
+            transform-origin: center center;
             line-height: 0;
         }
 
-        .synth-bg { width: 100%; height: auto; display: block; filter: drop-shadow(0 50px 100px rgba(0,0,0,0.8)); }
+        .synth-bg {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 50px 100px rgba(0, 0, 0, 0.8));
+        }
 
-        .brand-container { 
-            position: absolute; top: 15.5%; right: 21.5%; 
-            text-align: right; pointer-events: none; 
-            display: flex; flex-direction: column; align-items: flex-end; z-index: 200;
+        .brand-container {
+            position: absolute;
+            top: 15.5%;
+            right: 21.5%;
+            text-align: right;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            z-index: 200;
         }
-        .brand-text { 
-            font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.35rem;
-            font-weight: 700; font-style: italic; letter-spacing: 0.8px;
-            text-shadow: -1px -1px 1px rgba(0,0,0,0.9); line-height: 1.1; margin: 0;
+
+        .brand-text {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 1.35rem;
+            font-weight: 700;
+            font-style: italic;
+            letter-spacing: 0.8px;
+            text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.9);
+            line-height: 1.1;
+            margin: 0;
         }
+
         .brand-subtitle {
-            font-family: 'Montserrat', sans-serif; color: var(--gold); font-size: 0.55rem;
-            text-transform: uppercase; letter-spacing: 2px; font-weight: 400; opacity: 0.6; margin-top: 4px;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--gold);
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 400;
+            opacity: 0.6;
+            margin-top: 4px;
         }
 
-.raga-display-overlay {
-    position: absolute; top: 31.5%; left: 50%; transform: translateX(-50%);
-    z-index: 600; display: flex; flex-direction: column; align-items: center;
-    background: none; border: none; /* Completely transparent */
-}
+        .raga-display-overlay {
+            position: absolute;
+            top: 31.5%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            /* Completely transparent */
+        }
 
-.raga-stepper {
-    display: flex; align-items: center; gap: 15px;
-}
+        .raga-stepper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-.raga-name-display {
-    color: var(--gold); font-family: 'Montserrat', sans-serif;
-    font-size: 0.65rem; text-transform: uppercase;
-    letter-spacing: 2px; min-width: 80px; text-align: center;
-    text-shadow: 0 0 8px rgba(0,0,0,0.8);
-}
+        .raga-name-display {
+            color: var(--gold);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            min-width: 80px;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+        }
 
-.stepper-btn {
-    background: none; border: none; color: var(--gold);
-    cursor: pointer; font-size: 12px; opacity: 0.5;
-    transition: 0.2s; padding: 5px; outline: none;
-}
+        .stepper-btn {
+            background: none;
+            border: none;
+            color: var(--gold);
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0.5;
+            transition: 0.2s;
+            padding: 5px;
+            outline: none;
+        }
 
-.stepper-btn:hover { opacity: 1; text-shadow: 0 0 5px var(--gold); }
+        .stepper-btn:hover {
+            opacity: 1;
+            text-shadow: 0 0 5px var(--gold);
+        }
 
         .bellows-row {
-            position: absolute; top: 16.5%; left: 16%;
-            display: flex; align-items: center; gap: 12px; z-index: 100;
-            padding: 6px 12px; background: rgba(0, 0, 0, 0.15);
-            border-radius: 4px; box-shadow: inset 1px 1px 4px rgba(0,0,0,0.7);
+            position: absolute;
+            top: 16.5%;
+            left: 16%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.7);
         }
 
-        .switch-group { display: flex; align-items: center; gap: 8px; }
-        .toggle-label { font-size: 8px; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.8; }
-        
-        .switch { position: relative; width: 26px; height: 12px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider-pump { position: absolute; cursor: pointer; inset: 0; background-color: rgba(0, 0, 0, 0.4); box-shadow: inset 1.5px 1.5px 3px rgba(0,0,0,0.8); transition: .3s; border-radius: 12px; border: 0.5px solid rgba(212, 175, 55, 0.2); }
-        .slider-pump:before { position: absolute; content: ""; height: 6px; width: 6px; left: 3px; bottom: 2.5px; background-color: var(--gold); transition: .3s; border-radius: 50%; }
-        input:checked + .slider-pump:before { transform: translateX(14px); }
+        .switch-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-label {
+            font-size: 8px;
+            color: var(--gold);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            opacity: 0.8;
+        }
+
+        .switch {
+            position: relative;
+            width: 26px;
+            height: 12px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-pump {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            box-shadow: inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.8);
+            transition: .3s;
+            border-radius: 12px;
+            border: 0.5px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .slider-pump:before {
+            position: absolute;
+            content: "";
+            height: 6px;
+            width: 6px;
+            left: 3px;
+            bottom: 2.5px;
+            background-color: var(--gold);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider-pump:before {
+            transform: translateX(14px);
+        }
 
         .top-ui-row {
-            position: absolute; top: 56.5%; left: 50.1%; transform: translateX(-50%);
-            width: 73.1%; display: flex; justify-content: space-between; align-items: center; z-index: 300;
+            position: absolute;
+            top: 56.5%;
+            left: 50.1%;
+            transform: translateX(-50%);
+            width: 73.1%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 300;
         }
 
         .transpose-group {
-            display: flex; align-items: center; gap: 4px;
-            background: rgba(10, 5, 2, 0.8); padding: 1px 5px; border-radius: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(10, 5, 2, 0.8);
+            padding: 1px 5px;
+            border-radius: 2px;
             border: 0.5px solid rgba(212, 175, 55, 0.3);
         }
+
         .trans-btn {
-            background: transparent; border: none; color: var(--gold);
-            font-weight: bold; cursor: pointer; font-size: 10px; padding: 0 3px;
-            line-height: 1; opacity: 0.6; transition: 0.2s; outline: none;
+            background: transparent;
+            border: none;
+            color: var(--gold);
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 10px;
+            padding: 0 3px;
+            line-height: 1;
+            opacity: 0.6;
+            transition: 0.2s;
+            outline: none;
         }
-        .trans-btn:hover { opacity: 1; }
+
+        .trans-btn:hover {
+            opacity: 1;
+        }
+
         .trans-val {
-            font-family: 'Montserrat', sans-serif; font-size: 7px;
-            color: var(--led-on); min-width: 18px; text-align: center;
-            letter-spacing: 0.5px; font-weight: 600; text-shadow: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 7px;
+            color: var(--led-on);
+            min-width: 18px;
+            text-align: center;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            text-shadow: none;
         }
 
-        .octave-led-bar { display: flex; gap: 15px; align-items: center; }
-        .oct-unit { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-        .oct-led { width: 7px; height: 7px; border-radius: 50%; background: var(--led-off); border: 1px solid #110c05; transition: all 0.2s ease; }
-        .oct-led.active { background: var(--led-on); box-shadow: none; }
-        .controls-grid { 
-            position: absolute; top: 45.8%; left: 50%; transform: translateX(-50%); width: 68.5%; 
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; line-height: normal; 
+        .octave-led-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
-        .knob-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .knob__label { font-family: 'Playfair Display', serif; font-size: 0.7rem; color: var(--wood-dark); font-weight: 800; font-style: italic; margin-bottom: 5px; }
-        input[type="range"] { -webkit-appearance: none; width: 80%; background: var(--wood-dark); height: 3px; border-radius: 1px; cursor: pointer; outline: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: var(--wood-dark) !important; }
 
-        .keyboard-wrapper { 
-            position: absolute; top: 58.5%; left: 50.1%; transform: translateX(-50%); 
-            width: 73.1%; height: 18.9%; display: flex; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            border-radius: 12px; overflow: visible; background: #000; padding: 2px;
+        .oct-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
         }
-        .keyboard { display: flex; width: 100%; height: 100%; position: relative; }
-        .key { cursor: pointer; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; box-sizing: border-box; transition: transform 0.08s ease; position: relative; }
-        
-        .key.white { flex: 1; height: 100%; background: var(--ivory-key); border: 1px solid #dcd0ba; z-index: 1; border-radius: 12px 12px 10px 10px; margin: 0 0.5px; box-shadow: inset 0 -5px 8px rgba(0,0,0,0.05), 0 3px 5px rgba(0,0,0,0.2); }
-        .key.black { width: 4.5%; height: 60%; background: var(--black-key); z-index: 2; border-radius: 6px 6px 4px 4px; margin-left: -2.25%; margin-right: -2.25%; box-shadow: 2px 5px 10px rgba(0,0,0,0.5); }
-        
+
+        .oct-led {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--led-off);
+            border: 1px solid #110c05;
+            transition: all 0.2s ease;
+        }
+
+        .oct-led.active {
+            background: var(--led-on);
+            box-shadow: none;
+        }
+
+        .controls-grid {
+            position: absolute;
+            top: 45.8%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 68.5%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            line-height: normal;
+        }
+
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .knob__label {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.7rem;
+            color: var(--wood-dark);
+            font-weight: 800;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 80%;
+            background: var(--wood-dark);
+            height: 3px;
+            border-radius: 1px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: var(--wood-dark) !important;
+        }
+
+        .keyboard-wrapper {
+            position: absolute;
+            top: 58.5%;
+            left: 50.1%;
+            transform: translateX(-50%);
+            width: 73.1%;
+            height: 18.9%;
+            display: flex;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            overflow: visible;
+            background: #000;
+            padding: 2px;
+        }
+
+        .keyboard {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .key {
+            cursor: pointer;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            box-sizing: border-box;
+            transition: transform 0.08s ease;
+            position: relative;
+        }
+
+        .key.white {
+            flex: 1;
+            height: 100%;
+            background: var(--ivory-key);
+            border: 1px solid #dcd0ba;
+            z-index: 1;
+            border-radius: 12px 12px 10px 10px;
+            margin: 0 0.5px;
+            box-shadow: inset 0 -5px 8px rgba(0, 0, 0, 0.05), 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .key.black {
+            width: 4.5%;
+            height: 60%;
+            background: var(--black-key);
+            z-index: 2;
+            border-radius: 6px 6px 4px 4px;
+            margin-left: -2.25%;
+            margin-right: -2.25%;
+            box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.5);
+        }
+
         /* Precision Raga Masks */
-.key.highlight-y::after, .key.highlight-p::after, .key.highlight-b::after, .key.highlight-o::after, .key.highlight-g::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; z-index: 10;
-}
-        
-/* Yellow - Standard/Bright (Bilawal) */
-.key.highlight-y::after { background: rgba(255, 255, 100, 0.25); box-shadow: inset 0 0 12px rgba(212, 175, 55, 0.3); }
+        .key.highlight-y::after,
+        .key.highlight-p::after,
+        .key.highlight-b::after,
+        .key.highlight-o::after,
+        .key.highlight-g::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            z-index: 10;
+        }
 
-/* Pink - Evening/Sunset (Kalyan, Marwa, Purvi) */
-.key.highlight-p::after { background: rgba(255, 150, 200, 0.25); box-shadow: inset 0 0 12px rgba(255, 20, 147, 0.3); }
+        /* Yellow - Standard/Bright (Bilawal) */
+        .key.highlight-y::after {
+            background: rgba(255, 255, 100, 0.25);
+            box-shadow: inset 0 0 12px rgba(212, 175, 55, 0.3);
+        }
 
-/* Blue - Deep Night/Peace (Malkauns, Darbari, Asavari, Bhairavi) */
-.key.highlight-b::after { background: rgba(150, 200, 255, 0.25); box-shadow: inset 0 0 12px rgba(30, 144, 255, 0.3); }
+        /* Pink - Evening/Sunset (Kalyan, Marwa, Purvi) */
+        .key.highlight-p::after {
+            background: rgba(255, 150, 200, 0.25);
+            box-shadow: inset 0 0 12px rgba(255, 20, 147, 0.3);
+        }
 
-/* Orange - Morning/Energy (Bhairav, Todi, Bhopali) */
-.key.highlight-o::after { background: rgba(255, 180, 100, 0.25); box-shadow: inset 0 0 12px rgba(255, 140, 0, 0.3); }
+        /* Blue - Deep Night/Peace (Malkauns, Darbari, Asavari, Bhairavi) */
+        .key.highlight-b::after {
+            background: rgba(150, 200, 255, 0.25);
+            box-shadow: inset 0 0 12px rgba(30, 144, 255, 0.3);
+        }
 
-/* Green - Romantic/Seasonal (Khamaj, Kafi, Desh) */
-.key.highlight-g::after { background: rgba(150, 255, 150, 0.25); box-shadow: inset 0 0 12px rgba(40, 180, 100, 0.3); }
+        /* Orange - Morning/Energy (Bhairav, Todi, Bhopali) */
+        .key.highlight-o::after {
+            background: rgba(255, 180, 100, 0.25);
+            box-shadow: inset 0 0 12px rgba(255, 140, 0, 0.3);
+        }
+
+        /* Green - Romantic/Seasonal (Khamaj, Kafi, Desh) */
+        .key.highlight-g::after {
+            background: rgba(150, 255, 150, 0.25);
+            box-shadow: inset 0 0 12px rgba(40, 180, 100, 0.3);
+        }
 
 
-        .key.active { transform: translateY(4px); filter: brightness(0.9) saturate(1.2); border-top: 2px solid var(--gold); box-shadow: inset 0 5px 10px rgba(0,0,0,0.2); }
+        .key.active {
+            transform: translateY(4px);
+            filter: brightness(0.9) saturate(1.2);
+            border-top: 2px solid var(--gold);
+            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
 
-        .master-panel { position: absolute; top: 78.5%; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 20px; z-index: 100; padding: 5px 18px; background: rgba(30, 15, 5, 0.75); border-radius: 4px; border: 0.5px solid var(--gold-deep); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .drone-mini-led { width: 6px; height: 6px; border-radius: 50%; background: var(--led-off); margin-right: 4px; transition: 0.3s; border: 0.5px solid #000; }
-        .drone-mini-led.active { background: var(--led-on); }
+        .master-panel {
+            position: absolute;
+            top: 78.5%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            padding: 5px 18px;
+            background: rgba(30, 15, 5, 0.75);
+            border-radius: 4px;
+            border: 0.5px solid var(--gold-deep);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
 
-        .note-txt { pointer-events: none; text-transform: uppercase; font-size: 0.6rem; font-weight: 600; color: #6d5b4a; z-index: 15; }
-        .black .note-txt { color: var(--gold-light); font-size: 0.45rem; }
-        #air-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold-light) 0%, var(--gold) 60%, var(--gold-deep) 100%); }
-        .meter-container { width: 80px; height: 4px; background: rgba(0,0,0,0.6); border-radius: 2px; position: relative; overflow: hidden; }
-        #visualizer-canvas { position: absolute; top: 31%; left: 50%; transform: translateX(-50%); width: 57%; height: 14.2%; pointer-events: none; }
-    
+        .drone-mini-led {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--led-off);
+            margin-right: 4px;
+            transition: 0.3s;
+            border: 0.5px solid #000;
+        }
 
-.sargam-label {
-    position: absolute;
-    bottom: 10px;
-    width: 100%;
-    text-align: center;
-    font-family: 'Times New Roman', serif;
-    font-weight: bold;
-    font-size: 14px;
-    pointer-events: none;
-    z-index: 20;
-}
+        .drone-mini-led.active {
+            background: var(--led-on);
+        }
 
-/* For Black Keys, make text white */
-.key.black .sargam-label {
-    color: #fff;
-    bottom: 5px;
-}
+        .note-txt {
+            pointer-events: none;
+            text-transform: uppercase;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #6d5b4a;
+            z-index: 15;
+        }
 
-/* Mandra Saptak: Dot Below */
-.dot-below {
-    display: inline-block;
-    position: relative;
-}
-.dot-below::after {
-    content: ".";
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 20px;
-}
+        .black .note-txt {
+            color: var(--gold-light);
+            font-size: 0.45rem;
+        }
 
-/* Taar Saptak: Dot Above */
-.dot-above {
-    display: inline-block;
-    position: relative;
-}
-.dot-above::before {
-    content: ".";
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 20px;
-}
+        #air-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--gold-light) 0%, var(--gold) 60%, var(--gold-deep) 100%);
+        }
 
-u {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
+        .meter-container {
+            width: 80px;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
 
+        #visualizer-canvas {
+            position: absolute;
+            top: 31%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 57%;
+            height: 14.2%;
+            pointer-events: none;
+        }
+
+
+        .sargam-label {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-weight: bold;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .key.black .sargam-label {
+            color: #fff;
+            bottom: 5px;
+        }
+
+        .dot-below {
+            display: inline-block;
+            position: relative;
+        }
+
+        .dot-below::after {
+            content: ".";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+        }
+
+        /* Taar Saptak: Dot Above */
+        .dot-above {
+            display: inline-block;
+            position: relative;
+        }
+
+        .dot-above::before {
+            content: ".";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+        }
+
+        u {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
     </style>
 </head>
+
 <body>
 
-<div id="overlay"><button id="start-btn">PRESS TO PLAY</button></div>
+    <div id="overlay"><button id="start-btn">PRESS TO PLAY</button></div>
 
-<div class="zoom-viewport">
-    <img src="images/harmonium.png" class="synth-bg">
-    <div class="brand-container"><span class="brand-text">Bytes & Bellows</span><span class="brand-subtitle">Harmonium Companion</span></div>
-    
-    <div class="raga-display-overlay">
-    <span class="brand-subtitle" style="font-size: 5px; opacity: 0.5; margin-bottom: 2px; background: none;">Raga Filter</span>
-    <div class="raga-stepper">
-        <button class="stepper-btn" onclick="cycleRaga(-1)">&#10094;</button>
-        <span id="current-raga-name" class="raga-name-display">Chromatic</span>
-        <button class="stepper-btn" onclick="cycleRaga(1)">&#10095;</button>
-    </div>
-</div>
+    <div class="zoom-viewport">
+        <img src="images/harmonium.png" class="synth-bg">
+        <div class="brand-container"><span class="brand-text">Bytes & Bellows</span><span
+                class="brand-subtitle">Harmonium Companion</span></div>
 
-    <div class="bellows-row" id="pump-area">
-        <div class="switch-group" onclick="event.stopPropagation()"><span class="toggle-label">AUTO / MANUAL</span><label class="switch"><input type="checkbox" id="manual-toggle"><span class="slider-pump"></span></label></div>
-        <div class="meter-container" id="meter-ui" style="display: none;"><div id="air-fill"></div></div>
-    </div>
+        <div class="raga-display-overlay">
+            <span class="brand-subtitle"
+                style="font-size: 5px; opacity: 0.5; margin-bottom: 2px; background: none;">Raga Filter</span>
+            <div class="raga-stepper">
+                <button class="stepper-btn" onclick="cycleRaga(-1)">&#10094;</button>
+                <span id="current-raga-name" class="raga-name-display">Chromatic</span>
+                <button class="stepper-btn" onclick="cycleRaga(1)">&#10095;</button>
+            </div>
+        </div>
 
-    <div class="top-ui-row">
-    <div class="notation-container">
-        <div class="switch-group">
-            <label class="switch">
-                <input type="checkbox" id="notation-checkbox" onchange="toggleNotation()">
-                <span class="slider-pump"></span>
-            </label>
-            <span class="toggle-label" style="font-size: 7px; margin-left: 0.5px;">Sargam</span>
+        <div class="bellows-row" id="pump-area">
+            <div class="switch-group" onclick="event.stopPropagation()"><span class="toggle-label">AUTO /
+                    MANUAL</span><label class="switch"><input type="checkbox" id="manual-toggle"><span
+                        class="slider-pump"></span></label></div>
+            <div class="meter-container" id="meter-ui" style="display: none;">
+                <div id="air-fill"></div>
+            </div>
+        </div>
+
+        <div class="top-ui-row">
+            <div class="notation-container">
+                <div class="switch-group">
+                    <label class="switch">
+                        <input type="checkbox" id="notation-checkbox" onchange="toggleNotation()">
+                        <span class="slider-pump"></span>
+                    </label>
+                    <span class="toggle-label" style="font-size: 7px; margin-left: 0.5px;">Sargam</span>
+                </div>
+            </div>
+
+            <div class="octave-led-bar">
+                <div class="oct-unit" onclick="setOctave(-1)">
+                    <div class="oct-led" id="oct-low"></div>
+                </div>
+                <div class="oct-unit" onclick="setOctave(0)">
+                    <div class="oct-led active" id="oct-mid"></div>
+                </div>
+                <div class="oct-unit" onclick="setOctave(1)">
+                    <div class="oct-led" id="oct-high"></div>
+                </div>
+            </div>
+
+            <div class="transpose-group">
+                <button class="trans-btn" onclick="setTranspose(-1)">−</button>
+                <span class="trans-val" id="trans-display">+0</span>
+                <button class="trans-btn" onclick="setTranspose(1)">+</button>
+            </div>
+        </div>
+
+        <canvas id="visualizer-canvas"></canvas>
+        <div class="controls-grid">
+            <div class="knob-container"><span class="knob__label">Volume</span><input type="range" id="vol" min="-40"
+                    max="0" value="-3"></div>
+            <div class="knob-container"><span class="knob__label">Sustain</span><input type="range" id="sus" min="0.1"
+                    max="4" step="0.1" value="0"></div>
+            <div class="knob-container"><span class="knob__label">Chorus</span><input type="range" id="chorus-slider"
+                    min="0" max="0.6" step="0.01" value="0"></div>
+            <div class="knob-container"><span class="knob__label">Reverb</span><input type="range" id="rev" min="0"
+                    max="1" step="0.01" value="0"></div>
+
+
+        </div>
+
+        <div class="keyboard-wrapper">
+            <div id="keyboard" class="keyboard"></div>
+        </div>
+
+        <div class="master-panel">
+            <div class="switch-group"><span class="toggle-label">Sub-Oct</span><label class="switch"><input
+                        type="checkbox" id="sub-oct-toggle"><span class="slider-pump"></span></label></div>
+            <div class="switch-group"><span class="toggle-label">Coupler</span><label class="switch"><input
+                        type="checkbox" id="coupler-toggle"><span class="slider-pump"></span></label></div>
+            <div class="switch-group" style="cursor:pointer" id="drone-btn">
+                <div class="drone-mini-led" id="drone-led"></div><span class="toggle-label">Hold</span>
+            </div>
         </div>
     </div>
 
-    <div class="octave-led-bar">
-        <div class="oct-unit" onclick="setOctave(-1)"><div class="oct-led" id="oct-low"></div></div>
-        <div class="oct-unit" onclick="setOctave(0)"><div class="oct-led active" id="oct-mid"></div></div>
-        <div class="oct-unit" onclick="setOctave(1)"><div class="oct-led" id="oct-high"></div></div>
-    </div>
+    <script>
 
-    <div class="transpose-group">
-        <button class="trans-btn" onclick="setTranspose(-1)">−</button>
-        <span class="trans-val" id="trans-display">+0</span>
-        <button class="trans-btn" onclick="setTranspose(1)">+</button>
-    </div>
-</div>
-
-    <canvas id="visualizer-canvas"></canvas>
-    <div class="controls-grid">
-        <div class="knob-container"><span class="knob__label">Volume</span><input type="range" id="vol" min="-40" max="0" value="-3"></div>
-        <div class="knob-container"><span class="knob__label">Sustain</span><input type="range" id="sus" min="0.1" max="4" step="0.1" value="0"></div>
-         <div class="knob-container"><span class="knob__label">Chorus</span><input type="range" id="chorus-slider" min="0" max="0.6" step="0.01" value="0"></div>
-        <div class="knob-container"><span class="knob__label">Reverb</span><input type="range" id="rev" min="0" max="1" step="0.01" value="0"></div>
-        
-       
-    </div>
-    
-    <div class="keyboard-wrapper"><div id="keyboard" class="keyboard"></div></div>
-
-    <div class="master-panel">
-        <div class="switch-group"><span class="toggle-label">Sub-Oct</span><label class="switch"><input type="checkbox" id="sub-oct-toggle"><span class="slider-pump"></span></label></div>
-        <div class="switch-group"><span class="toggle-label">Coupler</span><label class="switch"><input type="checkbox" id="coupler-toggle"><span class="slider-pump"></span></label></div>
-        <div class="switch-group" style="cursor:pointer" id="drone-btn"><div class="drone-mini-led" id="drone-led"></div><span class="toggle-label">Hold</span></div>
-    </div>
-</div>
-
-<script>
-
-if (navigator.requestMIDIAccess) {
-    navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
-}
-
-function onMIDISuccess(midiAccess) {
-    midiAccess.onstatechange = (e) => console.log(e.port.name, e.port.state);
-    const inputs = midiAccess.inputs.values();
-    for (let input of inputs) {
-        input.onmidimessage = getMIDIMessage;
-    }
-}
-
-function onMIDIFailure() {
-    console.warn('MIDI access denied or not supported.');
-}
-
-function getMIDIMessage(message) {
-    const status = message.data[0] & 0xf0; 
-    const note = message.data[1];
-    const velocity = (message.data.length > 2) ? message.data[2] : 0;
-    const harmoniumIdx = note - 48;
-
-    if (harmoniumIdx >= 0 && harmoniumIdx < 22) {
-        if (status === 0x90 && velocity > 0) { 
-            handleKeyPress(harmoniumIdx, velocity / 127);
-        } else if (status === 0x80 || (status === 0x90 && velocity === 0)) { 
-            handleKeyRelease(harmoniumIdx);
+        if (navigator.requestMIDIAccess) {
+            navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
         }
-    }
-}
 
-const scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const indianScale = ["Sa", "re", "Re", "ga", "Ga", "Ma", "ma", "Pa", "dha", "Dha", "ni", "Ni"];
-const ragas = {
-    "none": [],
-    "bilawal": [0, 2, 4, 5, 7, 9, 11],
-    "kalyan": [0, 2, 4, 6, 7, 9, 11],
-    "khamaj": [0, 2, 4, 5, 7, 9, 10],
-    "bhairav": [0, 1, 4, 5, 7, 8, 11],
-    "bhairavi": [0, 1, 3, 5, 7, 8, 10],
-    "kafi": [0, 2, 3, 5, 7, 9, 10],
-    "asavari": [0, 2, 3, 5, 7, 8, 10],
-    "purvi": [0, 1, 4, 6, 7, 8, 11],
-    "marwa": [0, 1, 4, 6, 7, 9, 11],
-    "todi": [0, 1, 3, 6, 7, 8, 11],
-    "desh": [0, 2, 4, 5, 7, 9, 10, 11],
-    "shree": [0, 1, 4, 6, 7, 8, 11],
-    "bhopali": [0, 2, 4, 7, 9],
-    "malkauns": [0, 3, 5, 8, 10]
-};
+        function onMIDISuccess(midiAccess) {
+            midiAccess.onstatechange = (e) => console.log(e.port.name, e.port.state);
+            const inputs = midiAccess.inputs.values();
+            for (let input of inputs) {
+                input.onmidimessage = getMIDIMessage;
+            }
+        }
 
-const keyMap = {'a': 0, 'w': 1, 's': 2, 'e': 3, 'd': 4, 'f': 5, 't': 6, 'g': 7, 'y': 8, 'h': 9, 'u': 10, 'j': 11, 'k': 12, 'o': 13, 'l': 14, 'p': 15, ';': 16, "'": 17};
+        function onMIDIFailure() {
+            console.warn('MIDI access denied or not supported.');
+        }
 
-let octaveShift = 0, transposeShift = 0, reservoir = 100, isStarted = false, isManual = false, isDroneMode = false, isCoupler = false, isSubOct = false, isSustain = false, baseVol = -12, pumpCharge = 0;
-const activeNotes = new Map(), heldKeys = new Set(), sustainQueue = new Set();
+        function getMIDIMessage(message) {
+            const status = message.data[0] & 0xf0;
+            const note = message.data[1];
+            const velocity = (message.data.length > 2) ? message.data[2] : 0;
+            const harmoniumIdx = note - 48;
 
-const reverb = new Tone.Reverb({ decay: 4, wet: 0.3 }).toDestination();
-const chorus = new Tone.Chorus(4, 2.5, 0.5).connect(reverb).start();
-chorus.wet.value = 0;
+            if (harmoniumIdx >= 0 && harmoniumIdx < 22) {
+                if (status === 0x90 && velocity > 0) {
+                    handleKeyPress(harmoniumIdx, velocity / 127);
+                } else if (status === 0x80 || (status === 0x90 && velocity === 0)) {
+                    handleKeyRelease(harmoniumIdx);
+                }
+            }
+        }
 
-const sampler = new Tone.Sampler({
-    urls: { "C3": "100_Sa_B_harmonium1_1.mp3", "G3": "100_Pa_M_harmonium1_1.mp3", "C4": "100_Sa_H_harmonium1_1.mp3" },
-    baseUrl: "https://raw.githubusercontent.com/rtalwar26/midi-harmonium/master/audio/harmonium/"
-}).connect(chorus);
-
-const kb = document.getElementById('keyboard');
-for (let i = 0; i < 22; i++) {
-    const k = document.createElement('div');
-    k.className = `key ${scale[i % 12].includes('#') ? 'black' : 'white'}`;
-    k.dataset.idx = i;
-    k.innerHTML = `<span class="note-txt"></span>`;
-    kb.appendChild(k);
-    k.onmousedown = (e) => { e.preventDefault(); const rect = k.getBoundingClientRect(); const y = e.clientY - rect.top; const velocity = (y / rect.height) * 0.7 + 0.3; handleKeyPress(i, velocity); };
-    k.onmouseup = () => handleKeyRelease(i);
-    k.onmouseleave = () => handleKeyRelease(i);
-}
-
-const ragaKeys = Object.keys(ragas);
-let currentRagaIdx = 0;
-
-function cycleRaga(dir) {
-    currentRagaIdx += dir;
-    if (currentRagaIdx < 0) currentRagaIdx = ragaKeys.length - 1;
-    if (currentRagaIdx >= ragaKeys.length) currentRagaIdx = 0;
-    const selectedRaga = ragaKeys[currentRagaIdx];
-    document.getElementById('current-raga-name').innerText = selectedRaga === 'none' ? 'Chromatic' : selectedRaga;
-    applyRagaFilter(selectedRaga);
-}
-
-function applyRagaFilter(ragaName) {
-    const selected = (ragaName || ragaKeys[currentRagaIdx]).toLowerCase();
-    const allowed = ragas[selected];
-    document.querySelectorAll('.key').forEach(el => el.classList.remove('highlight-y', 'highlight-p', 'highlight-o', 'highlight-b', 'highlight-g', 'raga-dimmed'));
-    if (selected === "none" || !allowed) return;
-
-    let mask = 'highlight-y';
-    if (['bhairav', 'todi', 'bhopali', 'shree'].includes(selected)) mask = 'highlight-o';
-    else if (['malkauns', 'asavari', 'bhairavi', 'darbari'].includes(selected)) mask = 'highlight-b';
-    else if (['khamaj', 'kafi', 'desh'].includes(selected)) mask = 'highlight-g';
-    else if (['kalyan', 'purvi', 'marwa', 'yaman'].includes(selected)) mask = 'highlight-p';
-
-    document.querySelectorAll('.key').forEach(el => {
-        const logicalNote = (parseInt(el.dataset.idx) + transposeShift + 120) % 12;
-        if (allowed.includes(logicalNote)) el.classList.add(mask);
-        else el.classList.add('raga-dimmed');
-    });
-}
-
-function toggleNotation() {
-    const checkbox = document.getElementById('notation-checkbox');
-    const isIndian = checkbox ? checkbox.checked : false;
-    document.querySelectorAll('.key').forEach(k => {
-        const i = parseInt(k.dataset.idx);
-        let labelIdx = (i + transposeShift) % 12;
-        while (labelIdx < 0) labelIdx += 12;
-        k.querySelector('.note-txt').innerText = isIndian ? indianScale[labelIdx] : scale[labelIdx];
-    });
-}
-
-function setTranspose(dir) {
-    transposeShift = Math.max(-12, Math.min(12, transposeShift + dir));
-    document.getElementById('trans-display').innerText = (transposeShift >= 0 ? "+" : "") + transposeShift;
-    toggleNotation();
-    applyRagaFilter();
-    refreshAudio();
-}
-
-function setOctave(v) {
-    octaveShift = v;
-    document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
-    const ids = ['oct-low', 'oct-mid', 'oct-high'];
-    document.getElementById(ids[v+1]).classList.add('active');
-    refreshAudio();
-}
-
-function refreshAudio() {
-    const current = Array.from(activeNotes.entries());
-    current.forEach(([i]) => stopAudio(i));
-    current.forEach(([i, d]) => startAudio(i, d.vel));
-}
-
-function handleKeyPress(i, vel = 0.8) {
-    if (!isStarted || i < 0 || i >= 22) return;
-    heldKeys.add(i);
-    if (isDroneMode && activeNotes.has(i)) stopAudio(i); else startAudio(i, vel);
-}
-
-function handleKeyRelease(i) {
-    heldKeys.delete(i);
-    if (isDroneMode || isSustain) { if(isSustain) sustainQueue.add(i); return; }
-    stopAudio(i);
-}
-
-function startAudio(i, vel) {
-    if (activeNotes.has(i)) return;
-    const el = document.querySelector(`[data-idx="${i}"]`);
-    if (el) el.classList.add('active');
-    const totalShift = (octaveShift * 12) + transposeShift;
-    const freq = Tone.Frequency(scale[i % 12] + (3 + Math.floor(i / 12))).transpose(totalShift);
-    const name = freq.toNote();
-    let loop = null;
-
-    if (isDroneMode) {
-        if (Tone.Transport.state !== "started") Tone.Transport.start();
-        const dur = 2.7;
-        const trigger = (t) => {
-            sampler.triggerAttack(name, t, vel);
-            if (isCoupler) sampler.triggerAttack(freq.transpose(12), t, vel * 0.6);
-            if (isSubOct) sampler.triggerAttack(freq.transpose(-12), t, vel * 0.7);
+        const scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const indianScale = ["Sa", "re", "Re", "ga", "Ga", "Ma", "ma", "Pa", "dha", "Dha", "ni", "Ni"];
+        const ragas = {
+            "none": [],
+            "bilawal": [0, 2, 4, 5, 7, 9, 11],
+            "kalyan": [0, 2, 4, 6, 7, 9, 11],
+            "khamaj": [0, 2, 4, 5, 7, 9, 10],
+            "bhairav": [0, 1, 4, 5, 7, 8, 11],
+            "bhairavi": [0, 1, 3, 5, 7, 8, 10],
+            "kafi": [0, 2, 3, 5, 7, 9, 10],
+            "asavari": [0, 2, 3, 5, 7, 8, 10],
+            "purvi": [0, 1, 4, 6, 7, 8, 11],
+            "marwa": [0, 1, 4, 6, 7, 9, 11],
+            "todi": [0, 1, 3, 6, 7, 8, 11],
+            "desh": [0, 2, 4, 5, 7, 9, 10, 11],
+            "shree": [0, 1, 4, 6, 7, 8, 11],
+            "bhopali": [0, 2, 4, 7, 9],
+            "malkauns": [0, 3, 5, 8, 10]
         };
-        trigger(Tone.now());
-        loop = new Tone.Loop(trigger, dur).start(dur);
-    } else {
-        sampler.triggerAttack(name, Tone.now(), vel);
-        if (isCoupler) sampler.triggerAttack(freq.transpose(12), Tone.now(), vel * 0.6);
-        if (isSubOct) sampler.triggerAttack(freq.transpose(-12), Tone.now(), vel * 0.7);
-    }
-    activeNotes.set(i, { name, vel, loop });
-}
 
-function stopAudio(i) {
-    const d = activeNotes.get(i);
-    if (!d) return;
-    if (d.loop) { d.loop.stop(); d.loop.dispose(); }
-    sampler.triggerRelease([d.name, Tone.Frequency(d.name).transpose(12).toNote(), Tone.Frequency(d.name).transpose(-12).toNote()], Tone.now());
-    activeNotes.delete(i);
-    const el = document.querySelector(`[data-idx="${i}"]`);
-    if (el) el.classList.remove('active');
-}
+        const keyMap = { 'a': 0, 'w': 1, 's': 2, 'e': 3, 'd': 4, 'f': 5, 't': 6, 'g': 7, 'y': 8, 'h': 9, 'u': 10, 'j': 11, 'k': 12, 'o': 13, 'l': 14, 'p': 15, ';': 16, "'": 17 };
 
-function toggleSustain(s) {
-    isSustain = s;
-    if (!s) {
-        if (isDroneMode) { isDroneMode = false; document.getElementById('drone-led').classList.remove('active'); }
-        activeNotes.forEach((_, i) => { if (!heldKeys.has(i)) stopAudio(i); });
-        sustainQueue.clear();
-    }
-}
+        let octaveShift = 0, transposeShift = 0, reservoir = 100, isStarted = false, isManual = false, isDroneMode = false, isCoupler = false, isSubOct = false, isSustain = false, baseVol = -12, pumpCharge = 0;
+        const activeNotes = new Map(), heldKeys = new Set(), sustainQueue = new Set();
 
-window.onkeydown = (e) => {
-    if (e.repeat) return;
-    if (e.code === 'Space') { e.preventDefault(); if(isManual) pumpCharge = Math.min(pumpCharge + 70, 100); return; }
-    if (e.key === 'Shift') { toggleSustain(true); return; }
-    const idx = keyMap[e.key.toLowerCase()]; if (idx !== undefined) handleKeyPress(idx);
-};
-window.onkeyup = (e) => { 
-    if (e.key === 'Shift') toggleSustain(false); 
-    const idx = keyMap[e.key.toLowerCase()]; if (idx !== undefined) handleKeyRelease(idx); 
-};
+        const reverb = new Tone.Reverb({ decay: 4, wet: 0.3 }).toDestination();
+        const chorus = new Tone.Chorus(4, 2.5, 0.5).connect(reverb).start();
+        chorus.wet.value = 0;
 
-document.getElementById('manual-toggle').onclick = (e) => { isManual = e.target.checked; document.getElementById('meter-ui').style.display = isManual ? 'block' : 'none'; reservoir = isManual ? 0 : 100; };
-document.getElementById('coupler-toggle').onclick = (e) => { isCoupler = e.target.checked; refreshAudio(); };
-document.getElementById('sub-oct-toggle').onclick = (e) => { isSubOct = e.target.checked; refreshAudio(); };
-document.getElementById('drone-btn').onclick = () => {
-    isDroneMode = !isDroneMode;
-    document.getElementById('drone-led').classList.toggle('active');
-    if (!isDroneMode) { activeNotes.forEach((_, i) => { if (!heldKeys.has(i) && !isSustain) stopAudio(i); }); }
-};
+        const sampler = new Tone.Sampler({
+            urls: { "C3": "100_Sa_B_harmonium1_1.mp3", "G3": "100_Pa_M_harmonium1_1.mp3", "C4": "100_Sa_H_harmonium1_1.mp3" },
+            baseUrl: "https://raw.githubusercontent.com/rtalwar26/midi-harmonium/master/audio/harmonium/"
+        }).connect(chorus);
 
-document.getElementById('vol').oninput = e => baseVol = parseFloat(e.target.value);
-document.getElementById('rev').oninput = e => reverb.wet.value = parseFloat(e.target.value);
-document.getElementById('sus').oninput = e => sampler.release = parseFloat(e.target.value);
-document.getElementById('chorus-slider').oninput = (e) => {
-    const val = parseFloat(e.target.value);
-    chorus.depth = val;
-    chorus.wet.value = val > 0 ? 0.4 : 0;
-};
+        const kb = document.getElementById('keyboard');
+        for (let i = 0; i < 22; i++) {
+            const k = document.createElement('div');
+            k.className = `key ${scale[i % 12].includes('#') ? 'black' : 'white'}`;
+            k.dataset.idx = i;
+            k.innerHTML = `<span class="note-txt"></span>`;
+            kb.appendChild(k);
+            k.onmousedown = (e) => { e.preventDefault(); const rect = k.getBoundingClientRect(); const y = e.clientY - rect.top; const velocity = (y / rect.height) * 0.7 + 0.3; handleKeyPress(i, velocity); };
+            k.onmouseup = () => handleKeyRelease(i);
+            k.onmouseleave = () => handleKeyRelease(i);
+        }
 
-function loop() {
-    if (isManual) { reservoir = Math.min(100, reservoir + (pumpCharge * 0.12)); pumpCharge *= 0.85; reservoir = Math.max(0, reservoir - (0.05 + activeNotes.size * 0.04)); }
-    document.getElementById('air-fill').style.width = reservoir + "%";
-    sampler.volume.rampTo(isManual ? (reservoir < 0.01 ? -100 : baseVol + Tone.gainToDb(reservoir/70)) : baseVol, 0.1);
-    requestAnimationFrame(loop);
-}
+        const ragaKeys = Object.keys(ragas);
+        let currentRagaIdx = 0;
 
-const wave = new Tone.Waveform(512); sampler.connect(wave);
-const canvas = document.getElementById('visualizer-canvas'), ctx = canvas.getContext('2d');
-function draw() { 
-    requestAnimationFrame(draw); 
-    const b = wave.getValue(); 
-    ctx.clearRect(0,0,canvas.width,canvas.height); 
-    ctx.beginPath(); ctx.strokeStyle = "rgba(212,175,55,0.8)"; ctx.lineWidth = 1; 
-    for(let i=0; i<512; i++) { 
-        const x = (i/512)*canvas.width, y = (0.5 + b[i] * 0.4)*canvas.height; 
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); 
-    } 
-    ctx.stroke(); 
-}
-draw();
+        function cycleRaga(dir) {
+            currentRagaIdx += dir;
+            if (currentRagaIdx < 0) currentRagaIdx = ragaKeys.length - 1;
+            if (currentRagaIdx >= ragaKeys.length) currentRagaIdx = 0;
+            const selectedRaga = ragaKeys[currentRagaIdx];
+            document.getElementById('current-raga-name').innerText = selectedRaga === 'none' ? 'Chromatic' : selectedRaga;
+            applyRagaFilter(selectedRaga);
+        }
 
-document.getElementById('start-btn').onclick = async () => { 
-    await Tone.start(); 
-    await Tone.loaded(); 
-    isStarted = true; 
-    document.getElementById('overlay').remove(); 
-    toggleNotation(); 
-    loop(); 
-};
-</script>
+        function applyRagaFilter(ragaName) {
+            const selected = (ragaName || ragaKeys[currentRagaIdx]).toLowerCase();
+            const allowed = ragas[selected];
+            document.querySelectorAll('.key').forEach(el => el.classList.remove('highlight-y', 'highlight-p', 'highlight-o', 'highlight-b', 'highlight-g', 'raga-dimmed'));
+            if (selected === "none" || !allowed) return;
+
+            let mask = 'highlight-y';
+            if (['bhairav', 'todi', 'bhopali', 'shree'].includes(selected)) mask = 'highlight-o';
+            else if (['malkauns', 'asavari', 'bhairavi', 'darbari'].includes(selected)) mask = 'highlight-b';
+            else if (['khamaj', 'kafi', 'desh'].includes(selected)) mask = 'highlight-g';
+            else if (['kalyan', 'purvi', 'marwa', 'yaman'].includes(selected)) mask = 'highlight-p';
+
+            document.querySelectorAll('.key').forEach(el => {
+                const logicalNote = (parseInt(el.dataset.idx) + transposeShift + 120) % 12;
+                if (allowed.includes(logicalNote)) el.classList.add(mask);
+                else el.classList.add('raga-dimmed');
+            });
+        }
+
+        function toggleNotation() {
+            const checkbox = document.getElementById('notation-checkbox');
+            const isIndian = checkbox ? checkbox.checked : false;
+            document.querySelectorAll('.key').forEach(k => {
+                const i = parseInt(k.dataset.idx);
+                let labelIdx = (i + transposeShift) % 12;
+                while (labelIdx < 0) labelIdx += 12;
+                k.querySelector('.note-txt').innerText = isIndian ? indianScale[labelIdx] : scale[labelIdx];
+            });
+        }
+
+        function setTranspose(dir) {
+            transposeShift = Math.max(-12, Math.min(12, transposeShift + dir));
+            document.getElementById('trans-display').innerText = (transposeShift >= 0 ? "+" : "") + transposeShift;
+            toggleNotation();
+            applyRagaFilter();
+            refreshAudio();
+        }
+
+        function setOctave(v) {
+            octaveShift = v;
+            document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
+            const ids = ['oct-low', 'oct-mid', 'oct-high'];
+            document.getElementById(ids[v + 1]).classList.add('active');
+            refreshAudio();
+        }
+
+        function refreshAudio() {
+            const current = Array.from(activeNotes.entries());
+            current.forEach(([i]) => stopAudio(i));
+            current.forEach(([i, d]) => startAudio(i, d.vel));
+        }
+
+        function handleKeyPress(i, vel = 0.8) {
+            if (!isStarted || i < 0 || i >= 22) return;
+            heldKeys.add(i);
+            if (isDroneMode && activeNotes.has(i)) stopAudio(i); else startAudio(i, vel);
+        }
+
+        function handleKeyRelease(i) {
+            heldKeys.delete(i);
+            if (isDroneMode || isSustain) { if (isSustain) sustainQueue.add(i); return; }
+            stopAudio(i);
+        }
+
+        function startAudio(i, vel) {
+            if (activeNotes.has(i)) return;
+            const el = document.querySelector(`[data-idx="${i}"]`);
+            if (el) el.classList.add('active');
+            const totalShift = (octaveShift * 12) + transposeShift;
+            const freq = Tone.Frequency(scale[i % 12] + (3 + Math.floor(i / 12))).transpose(totalShift);
+            const name = freq.toNote();
+            let loop = null;
+
+            if (isDroneMode) {
+                if (Tone.Transport.state !== "started") Tone.Transport.start();
+                const dur = 2.7;
+                const trigger = (t) => {
+                    sampler.triggerAttack(name, t, vel);
+                    if (isCoupler) sampler.triggerAttack(freq.transpose(12), t, vel * 0.6);
+                    if (isSubOct) sampler.triggerAttack(freq.transpose(-12), t, vel * 0.7);
+                };
+                trigger(Tone.now());
+                loop = new Tone.Loop(trigger, dur).start(dur);
+            } else {
+                sampler.triggerAttack(name, Tone.now(), vel);
+                if (isCoupler) sampler.triggerAttack(freq.transpose(12), Tone.now(), vel * 0.6);
+                if (isSubOct) sampler.triggerAttack(freq.transpose(-12), Tone.now(), vel * 0.7);
+            }
+            activeNotes.set(i, { name, vel, loop });
+        }
+
+        function stopAudio(i) {
+            const d = activeNotes.get(i);
+            if (!d) return;
+            if (d.loop) { d.loop.stop(); d.loop.dispose(); }
+            sampler.triggerRelease([d.name, Tone.Frequency(d.name).transpose(12).toNote(), Tone.Frequency(d.name).transpose(-12).toNote()], Tone.now());
+            activeNotes.delete(i);
+            const el = document.querySelector(`[data-idx="${i}"]`);
+            if (el) el.classList.remove('active');
+        }
+
+        function toggleSustain(s) {
+            isSustain = s;
+            if (!s) {
+                if (isDroneMode) { isDroneMode = false; document.getElementById('drone-led').classList.remove('active'); }
+                activeNotes.forEach((_, i) => { if (!heldKeys.has(i)) stopAudio(i); });
+                sustainQueue.clear();
+            }
+        }
+
+        window.onkeydown = (e) => {
+            if (e.repeat) return;
+            if (e.code === 'Space') { e.preventDefault(); if (isManual) pumpCharge = Math.min(pumpCharge + 70, 100); return; }
+            if (e.key === 'Shift') { toggleSustain(true); return; }
+            const idx = keyMap[e.key.toLowerCase()]; if (idx !== undefined) handleKeyPress(idx);
+        };
+        window.onkeyup = (e) => {
+            if (e.key === 'Shift') toggleSustain(false);
+            const idx = keyMap[e.key.toLowerCase()]; if (idx !== undefined) handleKeyRelease(idx);
+        };
+
+        document.getElementById('manual-toggle').onclick = (e) => { isManual = e.target.checked; document.getElementById('meter-ui').style.display = isManual ? 'block' : 'none'; reservoir = isManual ? 0 : 100; };
+        document.getElementById('coupler-toggle').onclick = (e) => { isCoupler = e.target.checked; refreshAudio(); };
+        document.getElementById('sub-oct-toggle').onclick = (e) => { isSubOct = e.target.checked; refreshAudio(); };
+        document.getElementById('drone-btn').onclick = () => {
+            isDroneMode = !isDroneMode;
+            document.getElementById('drone-led').classList.toggle('active');
+            if (!isDroneMode) { activeNotes.forEach((_, i) => { if (!heldKeys.has(i) && !isSustain) stopAudio(i); }); }
+        };
+
+        document.getElementById('vol').oninput = e => baseVol = parseFloat(e.target.value);
+        document.getElementById('rev').oninput = e => reverb.wet.value = parseFloat(e.target.value);
+        document.getElementById('sus').oninput = e => sampler.release = parseFloat(e.target.value);
+        document.getElementById('chorus-slider').oninput = (e) => {
+            const val = parseFloat(e.target.value);
+            chorus.depth = val;
+            chorus.wet.value = val > 0 ? 0.4 : 0;
+        };
+
+        function loop() {
+            if (isManual) { reservoir = Math.min(100, reservoir + (pumpCharge * 0.12)); pumpCharge *= 0.85; reservoir = Math.max(0, reservoir - (0.05 + activeNotes.size * 0.04)); }
+            document.getElementById('air-fill').style.width = reservoir + "%";
+            sampler.volume.rampTo(isManual ? (reservoir < 0.01 ? -100 : baseVol + Tone.gainToDb(reservoir / 70)) : baseVol, 0.1);
+            requestAnimationFrame(loop);
+        }
+
+        const wave = new Tone.Waveform(512); sampler.connect(wave);
+        const canvas = document.getElementById('visualizer-canvas'), ctx = canvas.getContext('2d');
+        function draw() {
+            requestAnimationFrame(draw);
+            const b = wave.getValue();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath(); ctx.strokeStyle = "rgba(212,175,55,0.8)"; ctx.lineWidth = 1;
+            for (let i = 0; i < 512; i++) {
+                const x = (i / 512) * canvas.width, y = (0.5 + b[i] * 0.4) * canvas.height;
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+        draw();
+
+        document.getElementById('start-btn').onclick = async () => {
+            await Tone.start();
+            await Tone.loaded();
+            isStarted = true;
+            document.getElementById('overlay').remove();
+            toggleNotation();
+            loop();
+        };
+    </script>
 </body>
+
 </html>
