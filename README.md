@@ -1,6 +1,6 @@
 # 🎹 Bytes & Bellows: Harmonium Companion
 
-Web browser digital harmonium instrument 
+Browser digital harmonium instrument 🎹 — https://ledlaux.github.io/harmonium-companion/
 
 
 ---
