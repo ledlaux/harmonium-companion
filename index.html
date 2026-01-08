@@ -265,7 +265,6 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             position: absolute;
             top: 56.5%;
             left: 50%;
-            /* Adjusted to perfect 50% */
             transform: translateX(-50%);
             width: 73.1%;
             display: flex;
@@ -324,7 +323,6 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             display: flex;
             gap: 15px;
             align-items: center;
-            /* Absolute centering within the row parent */
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
@@ -429,6 +427,7 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             box-sizing: border-box;
             transition: transform 0.08s ease;
             position: relative;
+            overflow: visible;
         }
 
         .key.white {
@@ -452,7 +451,7 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             margin-right: -2.25%;
             box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.5);
         }
-     
+
         .key.highlight-y::after,
         .key.highlight-p::after,
         .key.highlight-b::after,
@@ -585,49 +584,102 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             z-index: 20;
         }
 
-        /* For Black Keys, make text white */
         .key.black .sargam-label {
             color: #fff;
             bottom: 5px;
         }
 
-        /* Mandra Saptak: Dot Below */
-        .dot-below {
-            display: inline-block;
+        .note-txt {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
             position: relative;
         }
 
-        .dot-below::after {
-            content: ".";
+        .dot-above,
+        .dot-below,
+        .double-dot-above,
+        .double-dot-below,
+        .dot-below-teevra,
+        .double-dot-below-teevra,
+        .teevra {
+            position: relative;
+            display: inline-block;
+            line-height: 1;
+            text-align: center;
+        }
+
+        u {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .teevra::after {
+            content: "";
             position: absolute;
-            bottom: -10px;
+            bottom: -6px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 20px;
-        }
-
-        /* Taar Saptak: Dot Above */
-        .dot-above {
-            display: inline-block;
-            position: relative;
+            width: 2px;
+            height: 6px;
+            background: currentColor;
         }
 
         .dot-above::before {
             content: ".";
             position: absolute;
-            top: -12px;
+            top: -10px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 20px;
+            font-size: 24px;
+            line-height: 0;
         }
 
-        /* Underline style for Komal notes */
-        u {
-            text-decoration: underline;
-            text-underline-offset: 2px;
+        .double-dot-above::before {
+            content: "..";
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            letter-spacing: -1px;
+            line-height: 0;
+        }
+
+        .dot-below::after {
+            content: ".";
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            line-height: 0;
+        }
+
+        .double-dot-below::after {
+            content: "..";
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            letter-spacing: -1px;
+            line-height: 0;
+            font-weight: bold;
+        }
+
+        .dot-below-teevra::after {
+            bottom: -4px;
+        }
+
+        .double-dot-below-teevra::after {
+            bottom: -3px;
         }
     </style>
 </head>
+
 <body>
 
     <div id="overlay"><button id="start-btn">PRESS TO PLAY</button></div>
@@ -828,16 +880,48 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
         function toggleNotation() {
             const checkbox = document.getElementById('notation-checkbox');
             const isIndian = checkbox ? checkbox.checked : false;
+
             document.querySelectorAll('.key').forEach(k => {
                 const i = parseInt(k.dataset.idx);
                 let labelIdx = (i + transposeShift) % 12;
                 while (labelIdx < 0) labelIdx += 12;
-                k.querySelector('.note-txt').innerText = isIndian ? indianScale[labelIdx] : scale[labelIdx];
+
+                const noteTxt = k.querySelector('.note-txt');
+
+                if (isIndian) {
+                    let sargam = indianScale[labelIdx];
+                    let keyOctave = Math.floor((i + transposeShift) / 12);
+                    let totalOctave = keyOctave + octaveShift;
+
+                    let finalHTML = sargam;
+
+                    if (sargam === sargam.toLowerCase() && !["Sa", "Pa", "ma"].includes(sargam)) {
+                        finalHTML = `<u>${sargam}</u>`;
+                    } else if (sargam === 'ma') {
+                        finalHTML = `<span class="teevra">${sargam}</span>`;
+                    }
+
+                    if (totalOctave <= -2) {
+                        const cls = sargam === 'ma' ? 'double-dot-below-teevra' : 'double-dot-below';
+                        noteTxt.innerHTML = `<span class="${cls}">${finalHTML}</span>`;
+                    } else if (totalOctave === -1) {
+                        const cls = sargam === 'ma' ? 'dot-below-teevra' : 'dot-below';
+                        noteTxt.innerHTML = `<span class="${cls}">${finalHTML}</span>`;
+                    } else if (totalOctave === 1) {
+                        noteTxt.innerHTML = `<span class="dot-above">${finalHTML}</span>`;
+                    } else if (totalOctave >= 2) {
+                        noteTxt.innerHTML = `<span class="double-dot-above">${finalHTML}</span>`;
+                    } else {
+                        noteTxt.innerHTML = finalHTML;
+                    }
+                } else {
+                    noteTxt.innerText = scale[labelIdx];
+                }
             });
         }
-
         function setTranspose(dir) {
-            transposeShift = Math.max(-12, Math.min(12, transposeShift + dir));
+            transposeShift = Math.max(-12, Math.min(12, transposeShift - dir));
+
             document.getElementById('trans-display').innerText = (transposeShift >= 0 ? "+" : "") + transposeShift;
             toggleNotation();
             applyRagaFilter();
@@ -849,6 +933,7 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
             const ids = ['oct-low', 'oct-mid', 'oct-high'];
             document.getElementById(ids[v + 1]).classList.add('active');
+            toggleNotation();
             refreshAudio();
         }
 
