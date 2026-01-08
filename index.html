@@ -34,8 +34,6 @@ Licensed under the GNU General Public License v3.0 (GPLv3).
 This is free software: you can redistribute it and/or modify it
 under the terms of the GPLv3 as published by the Free Software Foundation.
 -->
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -65,7 +63,7 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             padding: 0;
             width: 100%;
             height: 100%;
-            background-image: url('images/background.png');
+            background-image: url('/images/background.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -148,6 +146,8 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             margin-top: 4px;
         }
 
+        /* Raga Display Overlay */
+        /* Raga Display Overlay - Background Removed */
         .raga-display-overlay {
             position: absolute;
             top: 31.5%;
@@ -267,13 +267,20 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
         .top-ui-row {
             position: absolute;
             top: 56.5%;
-            left: 50.1%;
+            left: 50%;
+            /* Adjusted to perfect 50% */
             transform: translateX(-50%);
             width: 73.1%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 300;
+        }
+
+        .notation-container {
+            display: flex;
+            align-items: center;
+            z-index: 301;
         }
 
         .transpose-group {
@@ -284,6 +291,7 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             padding: 1px 5px;
             border-radius: 2px;
             border: 0.5px solid rgba(212, 175, 55, 0.3);
+            z-index: 301;
         }
 
         .trans-btn {
@@ -319,6 +327,10 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             display: flex;
             gap: 15px;
             align-items: center;
+            /* Absolute centering within the row parent */
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .oct-unit {
@@ -445,6 +457,7 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
         }
 
         /* Precision Raga Masks */
+        /* Precision Raga Masks */
         .key.highlight-y::after,
         .key.highlight-p::after,
         .key.highlight-b::after,
@@ -565,7 +578,6 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             pointer-events: none;
         }
 
-
         .sargam-label {
             position: absolute;
             bottom: 10px;
@@ -578,11 +590,13 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             z-index: 20;
         }
 
+        /* For Black Keys, make text white */
         .key.black .sargam-label {
             color: #fff;
             bottom: 5px;
         }
 
+        /* Mandra Saptak: Dot Below */
         .dot-below {
             display: inline-block;
             position: relative;
@@ -612,13 +626,13 @@ under the terms of the GPLv3 as published by the Free Software Foundation.
             font-size: 20px;
         }
 
+        /* Underline style for Komal notes */
         u {
             text-decoration: underline;
             text-underline-offset: 2px;
         }
     </style>
 </head>
-
 <body>
 
     <div id="overlay"><button id="start-btn">PRESS TO PLAY</button></div>
