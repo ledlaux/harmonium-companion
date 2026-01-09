@@ -6,7 +6,7 @@ Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/
 ---
 
 ## 🛠 Features
-* **Manual Bellows**: Real-time air reservoir simulation (requires pumping for sound).
+* **Auto / Manual Bellows**: Real-time air reservoir simulation (requires pumping for sound).
 * **Raga Filters**: Color-coded highlighting for 12+ Ragas/Thaats (Morning, Evening, Night).
 * **Dual Notation**: Toggle between **Sargam** (Sa, Re, Ga) and Western labels.
 * **Octave Coupler**: Includes Sub-Octave and Coupler modes for richer textures.
