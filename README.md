@@ -11,7 +11,7 @@ Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/
 * **Dual Notation**: Toggle between Sargam** (Sa, Re, Ga) and Western notation.
 * **Octave Coupler**: Includes Sub-Octave and Coupler modes for richer textures.
 * **Effects**: Adjustable Chorus and Reverb to experiment with acoustics.
-* **MIDI Support**: Plug-and-play.
+* **MIDI Support**: WebMIDI plug-and-play.
 
 ---
 
