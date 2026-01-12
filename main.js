@@ -352,11 +352,21 @@ function setTranspose(dir) {
 
 function setOctave(v) {
     octaveShift = v;
+
+    // 1. Remove active class from ALL possible LEDs
     document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
-    document.getElementById(['oct-low', 'oct-mid', 'oct-high'][v + 1]).classList.add('active');
+
+    // 2. Explicitly map the value to the ID to prevent calculation errors
+    let targetId = "";
+    if (v === -1) targetId = "oct-low";
+    else if (v === 0) targetId = "oct-mid";
+    else if (v === 1) targetId = "oct-high";
+
+    const led = document.getElementById(targetId);
+    if (led) led.classList.add('active');
     
     toggleNotation();
-    refreshAudio(true); // <--- Add true here to restart notes with new pitch
+    refreshAudio(true);
 }
 function toggleNotation() {
     const checkbox = document.getElementById('notation-checkbox');
