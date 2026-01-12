@@ -536,14 +536,25 @@ input:checked + .slider-pump {
 
 .knob__label {
     font-family: 'Playfair Display', serif;
-    font-size: 0.8rem;
-    color: var(--wood-dark);
-    font-weight: 500;
+    font-size: 0.78rem;
     font-style: italic;
-    margin-bottom: 0; 
+    color: var(--wood-dark);
+    /* Extra bold to prevent thin lines from disappearing */
+    font-weight: 800; 
+   
     text-align: center;
-    letter-spacing: 0.5px;
-    opacity: 0.9;
+    letter-spacing: 1px;
+
+    /* SHARP ENGRAVING (Zero Blur) */
+    /* By using 0px for the third value, we eliminate the blur entirely */
+    text-shadow: 
+        -1px -1px 0px rgba(0, 0, 0, 0.20),   /* Sharp dark top-left edge */
+         1px 1px 0px rgba(255, 255, 255, 0.1); /* Sharp light bottom-right edge */
+
+    /* Artistic Rendering */
+    mix-blend-mode: multiply; /* Lets wood grain show through the text */
+    -webkit-font-smoothing: antialiased; /* Forces cleaner edges in Chrome/Safari */
+    opacity: 1; /* Keep at 100% for maximum crispness */
 }
 
 input[type="range"] {
