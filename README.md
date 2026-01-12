@@ -1,6 +1,6 @@
-# 🎹 Bytes & Bellows: Harmonium Companion
+# 🎹 Harmonium Companion by Bytes & Bellows
 
-Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/harmonium-companion/
+Play in your browser 🎹 — Live Demo page: https://ledlaux.github.io/harmonium-companion/
 
 
 ---
@@ -10,21 +10,18 @@ Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/
 * **Raga Filters**: Color-coded highlighting for 12+ Ragas/Thaats (Morning, Evening, Night).
 * **Dual Notation**: Toggle between **Sargam** (Sa, Re, Ga) and Western notation.
 * **Octave Coupler**: Includes Sub-Octave and Coupler modes for richer textures.
-* **Effects**: Adjustable **Chorus** and **Reverb** to experiment with room depth and thickness.
-* **MIDI Support**: Plug-and-play with external MIDI keyboards.
+* **Effects**: Adjustable Chorus and Reverb to experiment with acoustics.
+* **MIDI Support**: WebMIDI plug-and-play.
 
 ---
 
 ## ⌨️ Controls
 | Action | Input |
 | :--- | :--- |
-| **Play Notes** | `A, W, S, E, D...` |
-| **Pump Bellows** | `Spacebar` (Manual Mode only) |
-| **Sustain** | `Shift` key |
-| **Transpose** | UI Buttons (+/-) |
-| **Octave** | Low / Mid / High indicators 
-| **Coupler** | Enable sub-octave and higher octave coupler |
-| **Hold** | Press button to hold notes |
+| **Play Notes** | Keyboard and MIDI |
+| **Pump Bellows** | Spacebar |
+| **Sustain** | Shift key |
+
 
 ---
 
