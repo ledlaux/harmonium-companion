@@ -10,7 +10,7 @@ Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/
 * **Raga Filters**: Color-coded highlighting for 12+ Ragas/Thaats (Morning, Evening, Night).
 * **Dual Notation**: Toggle between **Sargam** (Sa, Re, Ga) and Western notation.
 * **Octave Coupler**: Includes Sub-Octave and Coupler modes for richer textures.
-* **Effects**: Adjustable **Chorus** and **Reverb** to experiment with room depth and thickness.
+* **Effects**: Adjustable **Chorus** and **Reverb** to experiment with acoustics.
 * **MIDI Support**: Plug-and-play with external MIDI keyboards.
 
 ---
