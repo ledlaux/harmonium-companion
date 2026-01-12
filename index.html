@@ -5,7 +5,6 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Harmonium Companion</title>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
- 
       <link
          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Montserrat:wght@300;400;600&display=swap"
          rel="stylesheet">
@@ -19,7 +18,6 @@
                <span class="title-small">Bytes & Bellows</span>
                <span class="title-large">Harmonium Companion</span>
             </div>
-         
             <table id="controls-table">
                <thead>
                   <tr>
@@ -70,15 +68,12 @@
                <input type="checkbox" id="manual-toggle">
                <span class="slider-pump"></span>
                </label>
-               
             </div>
             <div class="meter-container" id="meter-ui" style="display: none;">
                <div id="air-fill"></div>
             </div>
          </div>
           <div class="top-ui-row">
-
-             <!-- Then notation switch -->
    <div class="notation-container">
       <div class="switch-group">
          <label class="switch">
@@ -87,10 +82,6 @@
          </label>
       </div>
    </div>
-
-   
-
-   <!-- Then octave LEDs -->
    <div class="octave-led-bar">
       <div class="oct-unit" data-octave="-1">
          <div class="oct-led" id="oct-low"></div>
@@ -102,14 +93,11 @@
          <div class="oct-led" id="oct-high"></div>
       </div>
    </div>
-<!-- Transpose first -->
    <div class="transpose-group">
       <button class="trans-btn trans-left">−</button>
       <span class="trans-val" id="trans-display">T</span>
       <button class="trans-btn trans-right">+</button>
    </div>
-  
-
 </div>
          <canvas id="visualizer-canvas"></canvas>
          <div class="controls-grid">
