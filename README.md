@@ -1,6 +1,6 @@
 # 🎹 Harmonium Companion by Bytes & Bellows
 
-Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/harmonium-companion/
+Play in your browser 🎹 — Live Demo page: https://ledlaux.github.io/harmonium-companion/
 
 
 ---
