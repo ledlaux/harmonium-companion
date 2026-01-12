@@ -1,4 +1,4 @@
-# 🎹 Bytes & Bellows: Harmonium Companion
+# 🎹 Harmonium Companion by Bytes & Bellows
 
 Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/harmonium-companion/
 
