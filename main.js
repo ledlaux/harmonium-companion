@@ -202,12 +202,13 @@ async function setupMIDI() {
 
 function handleMidiMessage(event) {
     const [status, note, velocity] = event.data;
-
     const isNoteOn = (status & 0xf0) === 0x90;
     const isNoteOff = ((status & 0xf0) === 0x80) || (isNoteOn && velocity === 0);
     const vel = velocity / 127;
 
-    const harmoniumIdx = note - 48; // Map MIDI C4=60 → harmonium index
+    // Use 36 (C2) as the floor to ensure common MIDI keyboards 
+    // align better with the harmonium's starting range.
+    const harmoniumIdx = note - 36; 
 
     if (isNoteOn && vel > 0) {
         handleKeyPress(harmoniumIdx, vel);
@@ -230,36 +231,42 @@ function handleKeyRelease(i){
     if (isDroneMode || isSustain) { if (isSustain) sustainQueue.add(i); return; }
     stopAudio(i);
 }
-
 function startAudio(i, vel = 0.8) {
     if (activeNotes.has(i)) return;
 
-    // Calculate total shift
     const totalShift = transposeShift + octaveShift * 12;
+    
+    // Calculate pitch correctly regardless of how high/low 'i' is
+    const baseOctave = 3; 
+    const pitch = Tone.Frequency(scale[((i % 12) + 12) % 12] + (baseOctave + Math.floor(i / 12))).transpose(totalShift);
+    const noteName = pitch.toNote();
 
-    // Compute note frequency
-    const freq = Tone.Frequency(scale[i % 12] + (3 + Math.floor(i / 12))).transpose(totalShift);
-    const noteName = freq.toNote();
-
-    // Trigger sampler
+    // Trigger Sampler
     sampler.triggerAttack(noteName, Tone.now(), vel);
-    if (isCoupler) sampler.triggerAttack(freq.transpose(12).toNote(), Tone.now(), vel * 0.5);
-    if (isSubOct) sampler.triggerAttack(freq.transpose(-12).toNote(), Tone.now(), vel * 0.5);
+    if (isCoupler) sampler.triggerAttack(pitch.transpose(12).toNote(), Tone.now(), vel * 0.5);
+    if (isSubOct) sampler.triggerAttack(pitch.transpose(-12).toNote(), Tone.now(), vel * 0.5);
 
     activeNotes.set(i, { name: noteName, vel });
 
-    // Visual highlight only if key exists on screen
+    // Visuals: Only if key is on screen
     const el = document.querySelector(`[data-idx="${i}"]`);
     if (el) el.classList.add('active');
 }
 
-function stopAudio(i){
-    const d = activeNotes.get(i); if(!d) return;
-    sampler.triggerRelease([d.name,
+function stopAudio(i) {
+    const d = activeNotes.get(i);
+    if (!d) return;
+
+    sampler.triggerRelease([
+        d.name,
         Tone.Frequency(d.name).transpose(12).toNote(),
-        Tone.Frequency(d.name).transpose(-12).toNote()], Tone.now());
+        Tone.Frequency(d.name).transpose(-12).toNote()
+    ], Tone.now());
+
     activeNotes.delete(i);
-    document.querySelector(`[data-idx="${i}"]`)?.classList.remove('active');
+
+    const el = document.querySelector(`[data-idx="${i}"]`);
+    if (el) el.classList.remove('active');
 }
 
 function refreshAudio(){
@@ -269,24 +276,61 @@ function refreshAudio(){
 /* -------------------------
    TRANSPOSE / OCTAVE / NOTATION / RAGA
 ------------------------- */
-function setTranspose(dir){ transposeShift=Math.max(-12,Math.min(12,transposeShift+dir)); document.getElementById('trans-display').innerText=(transposeShift>=0?"+":"")+transposeShift; toggleNotation(); applyRagaFilter(); refreshAudio(); }
+function setTranspose(dir){ transposeShift=Math.max(-12,Math.min(12,transposeShift+dir)); document.getElementById('trans-display').innerText = 
+        transposeShift === 0 ? "T" : (transposeShift > 0 ? "+" : "") + transposeShift;
+    
+    toggleNotation();
+    applyRagaFilter();
+    refreshAudio();
+}
 function setOctave(v){ octaveShift=v; document.querySelectorAll('.oct-led').forEach(l=>l.classList.remove('active')); document.getElementById(['oct-low','oct-mid','oct-high'][v+1]).classList.add('active'); toggleNotation(); refreshAudio(); }
 
-function toggleNotation(){
-    const isIndian = document.getElementById('notation-checkbox')?.checked || false;
-    document.querySelectorAll('.key').forEach(k=>{
-        const i=parseInt(k.dataset.idx);
-        let labelIdx=(i-transposeShift+12)%12;
-        const noteTxt=k.querySelector('.note-txt'); if(!noteTxt) return;
-        if(isIndian){
-            let sargam=indianScale[labelIdx], keyOct=Math.floor((i+transposeShift)/12), totalOct=keyOct+octaveShift;
-            let html=sargam; if(sargam===sargam.toLowerCase() && !["Sa","Pa","ma"].includes(sargam)) html=`<u>${sargam}</u>`; else if(sargam==='ma') html=`<span class="teevra">${sargam}</span>`;
-            if(totalOct<=-2) noteTxt.innerHTML=`<span class="double-dot-below">${html}</span>`;
-            else if(totalOct===-1) noteTxt.innerHTML=`<span class="dot-below">${html}</span>`;
-            else if(totalOct===1) noteTxt.innerHTML=`<span class="dot-above">${html}</span>`;
-            else if(totalOct>=2) noteTxt.innerHTML=`<span class="double-dot-above">${html}</span>`;
-            else noteTxt.innerHTML=html;
-        } else { noteTxt.innerText = scale[labelIdx]; }
+function toggleNotation() {
+    const checkbox = document.getElementById('notation-checkbox');
+    const isIndian = checkbox ? checkbox.checked : false;
+
+    document.querySelectorAll('.key').forEach(k => {
+        const i = parseInt(k.dataset.idx);
+        let labelIdx = (i - transposeShift) % 12;
+        while (labelIdx < 0) labelIdx += 12;
+
+        const noteTxt = k.querySelector('.note-txt');
+        if (!noteTxt) return; 
+
+        if (isIndian) {
+            let sargam = indianScale[labelIdx];
+            let keyOctave = Math.floor((i + transposeShift) / 12);
+            let totalOctave = keyOctave + octaveShift;
+            let finalHTML = sargam;
+
+            if (sargam === sargam.toLowerCase() && !["Sa", "Pa", "ma"].includes(sargam)) {
+                finalHTML = `<u>${sargam}</u>`;
+            } else if (sargam === 'ma') {
+                finalHTML = `<span class="teevra">${sargam}</span>`;
+            }
+
+            if (totalOctave <= -2) {
+                noteTxt.innerHTML = `<span class="double-dot-below">${finalHTML}</span>`;
+            } else if (totalOctave === -1) {
+                noteTxt.innerHTML = `<span class="dot-below">${finalHTML}</span>`;
+            } else if (totalOctave === 1) {
+                noteTxt.innerHTML = `<span class="dot-above">${finalHTML}</span>`;
+            } else if (totalOctave >= 2) {
+                noteTxt.innerHTML = `<span class="double-dot-above">${finalHTML}</span>`;
+            } else {
+                noteTxt.innerHTML = finalHTML;
+            }
+        } else {
+            // --- Western Mode (Restored Octave Numbers) ---
+            const noteName = scale[labelIdx];
+            let currentOctave = Math.floor(i / 12) + 3 + octaveShift;
+
+            if (noteName === "C") {
+                noteTxt.innerHTML = `${noteName}<span class="octave-num">${currentOctave}</span>`;
+            } else {
+                noteTxt.innerText = noteName;
+            }
+        }
     });
 }
 
@@ -365,6 +409,15 @@ document.getElementById('start-btn').onclick = async () => {
     loop();
     drawVisualizer();
 
+    window.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+}, false);
+
+// Disable dragging of elements (prevents ghost images of keys/labels when clicking)
+window.addEventListener('dragstart', (e) => {
+    e.preventDefault();
+}, false);
+
     // ----- KEYBOARD & PUMP HANDLER -----
     window.onkeydown = (e) => {
         if (e.repeat) return;
@@ -393,3 +446,7 @@ document.getElementById('start-btn').onclick = async () => {
         if (idx !== undefined) handleKeyRelease(idx);
     };
 };
+
+
+
+

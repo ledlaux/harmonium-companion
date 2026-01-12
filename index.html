@@ -19,7 +19,7 @@
                <span class="title-small">Bytes & Bellows</span>
                <span class="title-large">Harmonium Companion</span>
             </div>
-            <h3>Controls</h3>
+         
             <table id="controls-table">
                <thead>
                   <tr>
@@ -56,7 +56,7 @@
          </div>
          <div class="raga-display-overlay">
             <span class="brand-subtitle"
-               style="font-size: 10px; opacity: 0.5; margin-bottom: 2px; background: none;">Raga Filter</span>
+               style="font-size: 8px; opacity: 1; margin-bottom: 4px; background: none;">List of ragas</span>
             <div class="raga-stepper">
                <button class="stepper-btn stepper-left">&#10094;</button>
                <span id="current-raga-name" class="raga-name-display">Chromatic</span>
@@ -78,12 +78,17 @@
          </div>
           <div class="top-ui-row">
 
-   <!-- Transpose first -->
-   <div class="transpose-group">
-      <button class="trans-btn trans-left">−</button>
-      <span class="trans-val" id="trans-display">T</span>
-      <button class="trans-btn trans-right">+</button>
+             <!-- Then notation switch -->
+   <div class="notation-container">
+      <div class="switch-group">
+         <label class="switch">
+            <input type="checkbox" id="notation-checkbox">
+            <span class="slider-pump"></span>
+         </label>
+      </div>
    </div>
+
+   
 
    <!-- Then octave LEDs -->
    <div class="octave-led-bar">
@@ -97,16 +102,13 @@
          <div class="oct-led" id="oct-high"></div>
       </div>
    </div>
-
-   <!-- Then notation switch -->
-   <div class="notation-container">
-      <div class="switch-group">
-         <label class="switch">
-            <input type="checkbox" id="notation-checkbox">
-            <span class="slider-pump"></span>
-         </label>
-      </div>
+<!-- Transpose first -->
+   <div class="transpose-group">
+      <button class="trans-btn trans-left">−</button>
+      <span class="trans-val" id="trans-display">T</span>
+      <button class="trans-btn trans-right">+</button>
    </div>
+  
 
 </div>
          <canvas id="visualizer-canvas"></canvas>
