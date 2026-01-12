@@ -258,29 +258,24 @@ function startAudio(i, vel = 0.8) {
     if (activeNotes.has(i)) return;
 
     const totalShift = transposeShift + octaveShift * 12;
-    
-    // Calculate pitch correctly regardless of how high/low 'i' is
     const baseOctave = 3; 
     const pitch = Tone.Frequency(scale[((i % 12) + 12) % 12] + (baseOctave + Math.floor(i / 12))).transpose(totalShift);
     const noteName = pitch.toNote();
 
-    // Trigger Sampler
     sampler.triggerAttack(noteName, Tone.now(), vel);
     if (isCoupler) sampler.triggerAttack(pitch.transpose(12).toNote(), Tone.now(), vel * 0.5);
     if (isSubOct) sampler.triggerAttack(pitch.transpose(-12).toNote(), Tone.now(), vel * 0.5);
 
-    activeNotes.set(i, { name: noteName, vel });
+    // Save state once
+    activeNotes.set(i, { 
+        name: noteName, 
+        vel: vel,
+        couplerActive: isCoupler, 
+        subOctActive: isSubOct 
+    });
 
-    // Visuals: Only if key is on screen
     const el = document.querySelector(`[data-idx="${i}"]`);
     if (el) el.classList.add('active');
-
-    activeNotes.set(i, { 
-    name: noteName, 
-    vel,
-    couplerActive: isCoupler, // Track if coupler started
-    subOctActive: isSubOct    // Track if sub-octave started
-});
 }
 
 function stopAudio(i) {
@@ -301,13 +296,22 @@ function stopAudio(i) {
 }
 
 function refreshAudio(forceRestart = false) {
-    activeNotes.forEach((d, i) => {
-        if (forceRestart) {
-            // For Transpose/Octave: Full stop and restart
+    if (forceRestart) {
+        // 1. Create a static snapshot of current notes to avoid modifying Map during iteration
+        const notesToRestart = Array.from(activeNotes.entries());
+        
+        // 2. Clear all current sounds
+        notesToRestart.forEach(([i]) => {
             stopAudio(i);
+        });
+
+        // 3. Restart them (startAudio will now use the updated transpose/octave shifts)
+        notesToRestart.forEach(([i, d]) => {
             startAudio(i, d.vel);
-        } else {
-            // For Coupler/Sub-Oct: Only toggle side-reeds (no restart)
+        });
+    } else {
+        // Smooth Toggle Logic for Coupler/Sub-Oct (No restart)
+        activeNotes.forEach((d, i) => {
             const totalShift = transposeShift + octaveShift * 12;
             const pitch = Tone.Frequency(scale[((i % 12) + 12) % 12] + (3 + Math.floor(i / 12))).transpose(totalShift);
             
@@ -329,22 +333,31 @@ function refreshAudio(forceRestart = false) {
                 sampler.triggerRelease(subOctNote, Tone.now());
                 d.subOctActive = false;
             }
-        }
-    });
+        });
+    }
 }
 
 /* -------------------------
    TRANSPOSE / OCTAVE / NOTATION / RAGA
 ------------------------- */
-function setTranspose(dir){ transposeShift=Math.max(-12,Math.min(12,transposeShift+dir)); document.getElementById('trans-display').innerText = 
+function setTranspose(dir) {
+    transposeShift = Math.max(-12, Math.min(12, transposeShift + dir));
+    document.getElementById('trans-display').innerText = 
         transposeShift === 0 ? "T" : (transposeShift > 0 ? "+" : "") + transposeShift;
     
     toggleNotation();
     applyRagaFilter();
-    refreshAudio();
+    refreshAudio(true); // <--- Add true here to restart notes with new pitch
 }
-function setOctave(v){ octaveShift=v; document.querySelectorAll('.oct-led').forEach(l=>l.classList.remove('active')); document.getElementById(['oct-low','oct-mid','oct-high'][v+1]).classList.add('active'); toggleNotation(); refreshAudio(); }
 
+function setOctave(v) {
+    octaveShift = v;
+    document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
+    document.getElementById(['oct-low', 'oct-mid', 'oct-high'][v + 1]).classList.add('active');
+    
+    toggleNotation();
+    refreshAudio(true); // <--- Add true here to restart notes with new pitch
+}
 function toggleNotation() {
     const checkbox = document.getElementById('notation-checkbox');
     const isIndian = checkbox ? checkbox.checked : false;
