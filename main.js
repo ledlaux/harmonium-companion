@@ -274,26 +274,63 @@ function startAudio(i, vel = 0.8) {
     // Visuals: Only if key is on screen
     const el = document.querySelector(`[data-idx="${i}"]`);
     if (el) el.classList.add('active');
+
+    activeNotes.set(i, { 
+    name: noteName, 
+    vel,
+    couplerActive: isCoupler, // Track if coupler started
+    subOctActive: isSubOct    // Track if sub-octave started
+});
 }
 
 function stopAudio(i) {
     const d = activeNotes.get(i);
     if (!d) return;
 
+    // Release base note plus both potential side notes
+    const p = Tone.Frequency(d.name);
     sampler.triggerRelease([
         d.name,
-        Tone.Frequency(d.name).transpose(12).toNote(),
-        Tone.Frequency(d.name).transpose(-12).toNote()
+        p.transpose(12).toNote(),
+        p.transpose(-12).toNote()
     ], Tone.now());
 
     activeNotes.delete(i);
-
     const el = document.querySelector(`[data-idx="${i}"]`);
     if (el) el.classList.remove('active');
 }
 
-function refreshAudio(){
-    Array.from(activeNotes.entries()).forEach(([i,d])=>{ stopAudio(i); startAudio(i,d.vel); });
+function refreshAudio(forceRestart = false) {
+    activeNotes.forEach((d, i) => {
+        if (forceRestart) {
+            // For Transpose/Octave: Full stop and restart
+            stopAudio(i);
+            startAudio(i, d.vel);
+        } else {
+            // For Coupler/Sub-Oct: Only toggle side-reeds (no restart)
+            const totalShift = transposeShift + octaveShift * 12;
+            const pitch = Tone.Frequency(scale[((i % 12) + 12) % 12] + (3 + Math.floor(i / 12))).transpose(totalShift);
+            
+            const couplerNote = pitch.transpose(12).toNote();
+            const subOctNote = pitch.transpose(-12).toNote();
+
+            if (isCoupler && !d.couplerActive) {
+                sampler.triggerAttack(couplerNote, Tone.now(), d.vel * 0.5);
+                d.couplerActive = true;
+            } else if (!isCoupler && d.couplerActive) {
+                sampler.triggerRelease(couplerNote, Tone.now());
+                d.couplerActive = false;
+            }
+
+            if (isSubOct && !d.subOctActive) {
+                sampler.triggerAttack(subOctNote, Tone.now(), d.vel * 0.5);
+                d.subOctActive = true;
+            } else if (!isSubOct && d.subOctActive) {
+                sampler.triggerRelease(subOctNote, Tone.now());
+                d.subOctActive = false;
+            }
+        }
+    });
 }
 
 /* -------------------------
