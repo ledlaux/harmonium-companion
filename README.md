@@ -8,9 +8,9 @@ Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/
 ## 🛠 Features
 * **Auto / Manual Bellows**: Real-time air reservoir simulation (requires pumping for sound).
 * **Learn Ragas**: Color-coded highlighting for 12+ Indian Ragas/Thaats (Morning, Evening, Night).
-* **Dual Notation**: Toggle between **Sargam** (Sa, Re, Ga) and Western notation.
+* **Dual Notation**: Toggle between Sargam** (Sa, Re, Ga) and Western notation.
 * **Octave Coupler**: Includes Sub-Octave and Coupler modes for richer textures.
-* **Effects**: Adjustable **Chorus** and **Reverb** to experiment with acoustics.
+* **Effects**: Adjustable Chorus and Reverb to experiment with acoustics.
 * **MIDI Support**: Plug-and-play.
 
 ---
@@ -18,8 +18,8 @@ Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/
 ## ⌨️ Controls
 | Action | Input |
 | :--- | :--- |
-| **Play Notes** | A-Z and MIDI |
-| **Pump Bellows** | Spacebar or auto mode |
+| **Play Notes** | Keyboard and MIDI |
+| **Pump Bellows** | Spacebar |
 | **Sustain** | Shift key |
 
 
