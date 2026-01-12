@@ -18,9 +18,9 @@ Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/
 ## ⌨️ Controls
 | Action | Input |
 | :--- | :--- |
-| **Play Notes** | `A-Z` and `MIDI` |
-| **Pump Bellows** | `Spacebar` (Manual Mode only) |
-| **Sustain** | `Shift` key |
+| **Play Notes** | A-Z and MIDI |
+| **Pump Bellows** | Spacebar or auto mode |
+| **Sustain** | Shift key |
 
 
 ---
