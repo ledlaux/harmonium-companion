@@ -18,13 +18,10 @@ Browser harmonium instrument 🎹 — Live Demo page: https://ledlaux.github.io/
 ## ⌨️ Controls
 | Action | Input |
 | :--- | :--- |
-| **Play Notes** | `A, W, S, E, D...` |
+| **Play Notes** | `A-Z` and `MIDI` |
 | **Pump Bellows** | `Spacebar` (Manual Mode only) |
 | **Sustain** | `Shift` key |
-| **Transpose** | UI Buttons (+/-) |
-| **Octave** | Low / Mid / High indicators 
-| **Coupler** | Enable sub-octave and higher octave coupler |
-| **Hold** | Press button to hold notes |
+
 
 ---
 
