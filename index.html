@@ -157,7 +157,6 @@
     </label>
 </div>
 
-
 <div class="transport-deck">
     <div class="deck-section file-controls">
         <input type="file" id="song-file-input" accept=".mid,.midi" style="display: none;">
@@ -175,13 +174,14 @@
         <div class="midi-progress-container">
             <div id="midi-progress-bar"></div>
         </div>
+
         <div class="tempo-control">
-    <div class="tempo-meta">
-        <span id="bpm-display">120</span>
-        <label class="tempo-label">BPM</label>
-    </div>
-    <input type="range" id="tempo-slider" min="40" max="240" value="120">
-</div>
+            <input type="range" id="tempo-slider" min="40" max="240" value="120">
+            <div class="tempo-meta">
+                <span id="bpm-display">120</span>
+                <label class="tempo-label">BPM</label>
+            </div>
+        </div>
     </div>
 </div>
             </div>

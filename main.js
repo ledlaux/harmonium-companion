@@ -565,64 +565,39 @@ document.getElementById("strict-raga-toggle")?.addEventListener("change", e => {
 };
 
 
-
-function prepareMidiTransport() {
-    Tone.Transport.stop();
-
-    Tone.Transport.cancel(); // Wipe previous file's notes
-
-    currentMidi.tracks.forEach(track => {
-        track.notes.forEach(note => {
-            const keyIdx = note.midi - 48;
-
-            // Only schedule if within range of your UI/Synth
-            if (keyIdx >= 0 && keyIdx < 100) { 
-                // Schedule ON
-                Tone.Transport.schedule((time) => {
-                    handleKeyPress(keyIdx, note.velocity);
-                    Tone.Draw.schedule(() => {
-                        document.querySelector(`.key[data-idx="${keyIdx}"]`)?.classList.add('active');
-                    }, time);
-                }, note.time);
-
-                // Schedule OFF
-                Tone.Transport.schedule((time) => {
-                    handleKeyRelease(keyIdx);
-                    Tone.Draw.schedule(() => {
-                        document.querySelector(`.key[data-idx="${keyIdx}"]`)?.classList.remove('active');
-                    }, time);
-                }, note.time + note.duration);
-            }
-        });
-    });
-}
-
-
 let currentMidi = null;
+let animationFrameId = null; // To track and stop the loop
 
 document.addEventListener('DOMContentLoaded', () => {
-    // renamed to avoid 'midi' conflict
     const songFileInput = document.getElementById('song-file-input');
     const songLabel = document.getElementById('song-label');
     const playBtn = document.getElementById('midi-play');
     const stopBtn = document.getElementById('midi-stop');
     const progressBar = document.getElementById('midi-progress-bar');
+    const progressContainer = document.querySelector('.midi-progress-container');
+    const tempoSlider = document.getElementById('tempo-slider');
 
-    if (songFileInput) {
-        songFileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+    // --- 1. MIDI FILE LOADING ---
+    songFileInput?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
+        try {
             const arrayBuffer = await file.arrayBuffer();
             currentMidi = new Midi(arrayBuffer);
             
-            updateTempo(currentMidi.header.tempos[0]?.bpm || 120);
+            // Sync UI and Transport
+            const midiBpm = currentMidi.header.tempos[0]?.bpm || 120;
+            updateTempo(midiBpm);
             prepareMidiTransport();
 
-            songLabel.innerText = file.name.substring(0, 10) + "...";
-        });
-    }
+            if (songLabel) songLabel.innerText = file.name.substring(0, 10) + "...";
+        } catch (err) {
+            console.error("Midi Load Error:", err);
+        }
+    });
 
+    // --- 2. TRANSPORT CONTROLS ---
     playBtn?.addEventListener('click', async () => {
         await Tone.start();
         if (Tone.Transport.state === 'started') {
@@ -631,69 +606,88 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             Tone.Transport.start();
             playBtn.innerText = '⏸';
-            updateProgressBar(); // Start the visual loop
+            startProgressLoop(); // Start the single loop
         }
     });
 
     stopBtn?.addEventListener('click', () => {
         Tone.Transport.stop();
-        playBtn.innerText = '▶';
+        if (playBtn) playBtn.innerText = '▶';
         if (progressBar) progressBar.style.width = '0%';
-        document.querySelectorAll('.key').forEach(k => k.classList.remove('active'));
+        
+        // Panic: Kill all sound and UI highlights
+        cancelAnimationFrame(animationFrameId);
+        document.querySelectorAll('.key').forEach(k => {
+            k.classList.remove('active', 'midi-active');
+            handleKeyRelease(parseInt(k.dataset.idx)); 
+        });
     });
 
-    // PROGRESS BAR LOGIC
-    function updateProgressBar() {
-        if (Tone.Transport.state === 'started' && currentMidi) {
-            const totalDuration = currentMidi.duration;
-            const currentSeconds = Tone.Transport.seconds;
-            const progress = (currentSeconds / totalDuration) * 100;
-            
-            if (progressBar) {
-                progressBar.style.width = Math.min(progress, 100) + '%';
-            }
+    // --- 3. TEMPO & PROGRESS LOGIC ---
+    tempoSlider?.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        Tone.Transport.bpm.value = val;
+        const display = document.getElementById('bpm-display');
+        if (display) display.innerText = Math.round(val);
+    });
 
-            if (progress < 100) {
-                requestAnimationFrame(updateProgressBar);
-            } else {
-                playBtn.innerText = '▶';
-            }
-        }
-    }
+    progressContainer?.addEventListener('click', (e) => {
+        if (!currentMidi) return;
+        const rect = progressContainer.getBoundingClientRect();
+        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        
+        Tone.Transport.seconds = percent * currentMidi.duration;
+        if (progressBar) progressBar.style.width = (percent * 100) + '%';
+    });
 });
-// Helper to ensure tempo UI stays in sync
-function updateTempo(val) {
-    const bpm = Math.round(val);
-    
-    // Set the engine speed
-    Tone.Transport.bpm.value = bpm;
-    
-    // Sync the UI elements
-    const display = document.getElementById('bpm-display');
-    const slider = document.getElementById('tempo-slider');
-    
-    if (display) display.innerText = bpm;
-    if (slider) {
-        slider.value = bpm;
-        // Optional: Update slider min/max if MIDI is very fast/slow
-        if (bpm > slider.max) slider.max = bpm + 20;
-        if (bpm < slider.min) slider.min = Math.max(10, bpm - 20);
-    }
+
+// --- HELPER FUNCTIONS ---
+
+function prepareMidiTransport() {
+    Tone.Transport.cancel(); // Wipe previous schedule
+
+    currentMidi.tracks.forEach(track => {
+        track.notes.forEach(note => {
+            const keyIdx = note.midi - 48;
+            if (keyIdx >= 0 && keyIdx < 100) { 
+                Tone.Transport.schedule((time) => {
+                    handleKeyPress(keyIdx, note.velocity);
+                    Tone.Draw.schedule(() => {
+                        document.querySelector(`.key[data-idx="${keyIdx}"]`)?.classList.add('midi-active');
+                    }, time);
+                }, note.time);
+
+                Tone.Transport.schedule((time) => {
+                    handleKeyRelease(keyIdx);
+                    Tone.Draw.schedule(() => {
+                        document.querySelector(`.key[data-idx="${keyIdx}"]`)?.classList.remove('midi-active');
+                    }, time);
+                }, note.time + note.duration);
+            }
+        });
+    });
 }
 
+function startProgressLoop() {
+    // Prevent multiple loops from running at once
+    cancelAnimationFrame(animationFrameId);
+    
+    const update = () => {
+        const progressBar = document.getElementById('midi-progress-bar');
+        if (currentMidi && Tone.Transport.state === 'started') {
+            const progress = (Tone.Transport.seconds / currentMidi.duration) * 100;
+            if (progressBar) progressBar.style.width = Math.min(progress, 100) + '%';
+        }
+        animationFrameId = requestAnimationFrame(update);
+    };
+    update();
+}
 
-
-const tempoSlider = document.getElementById('tempo-slider');
-const bpmDisplay = document.getElementById('bpm-display');
-
-if (tempoSlider) {
-    tempoSlider.addEventListener('input', (e) => {
-        const newBpm = parseFloat(e.target.value);
-        
-        // 1. Update the Tone.js Engine
-        Tone.Transport.bpm.value = newBpm;
-        
-        // 2. Update the UI Text
-        if (bpmDisplay) bpmDisplay.innerText = Math.round(newBpm);
-    });
+function updateTempo(val) {
+    const bpm = Math.round(val);
+    Tone.Transport.bpm.value = bpm;
+    const slider = document.getElementById('tempo-slider');
+    const display = document.getElementById('bpm-display');
+    if (slider) slider.value = bpm;
+    if (display) display.innerText = bpm;
 }
