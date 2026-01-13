@@ -40,7 +40,9 @@ const ragas = {
     "malkauns": [0,3,5,8,10]
 };
 let currentRagaIdx = 0;
+let isStrictRaga = false;
 const ragaKeys = Object.keys(ragas);
+
 
 /* -------------------------
    AUDIO SETUP
@@ -214,12 +216,26 @@ function handleMidiMessage(event) {
    NOTE LOGIC
 ------------------------- */
 function handleKeyPress(i, vel = 0.8) {
-    if (!isStarted) return;
+   if (!isStarted) return;
 
-    // TOGGLE: If Drone Mode is ON and note is already playing, turn it OFF.
+    // --- STRICT RAGA GATE ---
+    if (isStrictRaga) {
+        const selectedRaga = ragaKeys[currentRagaIdx];
+        const allowedNotes = ragas[selectedRaga];
+        
+        if (selectedRaga !== "none" && allowedNotes) {
+            // Subtract transposeShift to check the note's position relative to the root Sa
+            const adjustedIdx = i - transposeShift;
+            const logicalNote = ((adjustedIdx % 12) + 12) % 12;
+            
+            if (!allowedNotes.includes(logicalNote)) return; 
+        }
+    }
+
     if (isDroneMode && activeNotes.has(i)) {
         stopAudio(i);
-        heldKeys.delete(i);
+        heldKeys.add(i); // Still track the physical key state
+        heldKeys.delete(i); 
         return;
     }
 
@@ -242,18 +258,7 @@ function handleKeyRelease(i) {
     stopAudio(i);
 }
 
-function handleKeyRelease(i) {
-    heldKeys.delete(i);
-    
-    // In Drone Mode, we don't want the mouse-up/key-up to stop the sound.
-    // The sound only stops if toggleSustain is called or via the toggle in handleKeyPress.
-    if (isDroneMode || isSustain) { 
-        if (isSustain) sustainQueue.add(i); 
-        return; 
-    }
-    
-    stopAudio(i);
-}
+
 function startAudio(i, vel = 0.8) {
     if (activeNotes.has(i)) return;
 
@@ -423,19 +428,36 @@ function cycleRaga(dir){
     applyRagaFilter();
 }
 
-function applyRagaFilter(ragaName){
-    const selected=(ragaName||ragaKeys[currentRagaIdx]).toLowerCase();
-    const allowed=ragas[selected];
-    document.querySelectorAll('.key').forEach(el=>el.classList.remove('highlight-y','highlight-p','highlight-o','highlight-b','highlight-g','raga-dimmed'));
-    if(selected==="none"||!allowed) return;
-    let mask='highlight-y';
-    if(['bhairav','todi','bhopali','shree'].includes(selected)) mask='highlight-o';
-    else if(['malkauns','asavari','bhairavi','darbari'].includes(selected)) mask='highlight-b';
-    else if(['khamaj','kafi','desh'].includes(selected)) mask='highlight-g';
-    else if(['kalyan','purvi','marwa','yaman'].includes(selected)) mask='highlight-p';
-    document.querySelectorAll('.key').forEach(el=>{
-        const logicalNote=(parseInt(el.dataset.idx)+transposeShift+120)%12;
-        if(allowed.includes(logicalNote)) el.classList.add(mask); else el.classList.add('raga-dimmed');
+function applyRagaFilter(ragaName) {
+    const selected = (ragaName || ragaKeys[currentRagaIdx]).toLowerCase();
+    const allowed = ragas[selected];
+    
+    document.querySelectorAll('.key').forEach(el => {
+        // 1. Reset all possible visual states
+        el.classList.remove('highlight-y', 'highlight-p', 'highlight-o', 'highlight-b', 'highlight-g', 'raga-dimmed', 'raga-locked');
+        
+        if (selected === "none" || !allowed) return;
+
+        // 2. Calculate the "Relative Sa" based on Transpose
+        // This ensures the coloring moves with your Transpose setting
+        const i = parseInt(el.dataset.idx);
+        const adjustedIdx = i - transposeShift;
+        const logicalNote = ((adjustedIdx % 12) + 12) % 12;
+
+        // 3. Apply coloring or locking
+        if (allowed.includes(logicalNote)) {
+            // Determine which color mask to use based on the Raga
+            let mask = 'highlight-y'; // Default Yellow
+            if (['kalyan','purvi','marwa'].includes(selected)) mask = 'highlight-p';
+            if (['bhairav','todi','bhopali','shree'].includes(selected)) mask = 'highlight-o';
+            if (['malkauns','asavari','bhairavi'].includes(selected)) mask = 'highlight-b';
+            if (['khamaj','kafi','desh'].includes(selected)) mask = 'highlight-g';
+            
+            el.classList.add(mask);
+        } else {
+            // If not in the raga, dim it or lock it
+            el.classList.add(isStrictRaga ? 'raga-locked' : 'raga-dimmed');
+        }
     });
 }
 
@@ -500,6 +522,17 @@ document.getElementById('start-btn').onclick = async () => {
 window.addEventListener('dragstart', (e) => {
     e.preventDefault();
 }, false);
+
+document.getElementById("strict-raga-toggle")?.addEventListener("change", e => {
+    isStrictRaga = e.target.checked;
+    // Visually update the keys immediately
+    applyRagaFilter(); 
+});
+
+document.getElementById("strict-raga-toggle")?.addEventListener("change", e => {
+    isStrictRaga = e.target.checked;
+    applyRagaFilter(); // Refresh visual state immediately
+});
 
 
     // ----- KEYBOARD & PUMP HANDLER -----

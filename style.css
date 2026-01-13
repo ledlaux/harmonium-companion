@@ -223,12 +223,17 @@
 .brand-container {
     position: absolute;
     top: 16.2%;
-    right: 21.2%;         /* Shifted further right (from 21.5%) */
+    right: 21.2%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* This centers the flex items relative to the container's center line */
+    align-items: center; 
+    /* Ensures the text itself is centered if it wraps */
+    text-align: center;  
     pointer-events: none;
     z-index: 10;
+    /* Optional: give it a width to ensure the 'center' has enough space */
+    min-width: 150px; 
 }
 
 .brand-text {
@@ -238,6 +243,8 @@
     font-weight: 500;
     font-style: italic;
     letter-spacing: 2px;
+    /* Offset the letter-spacing to truly center the text */
+    text-indent: 2px; 
     line-height: 1;
     margin: 0;
     opacity: 0.85;
@@ -247,18 +254,19 @@
 .brand-subtitle {
     font-family: 'Playfair Display', serif;
     color: var(--gold);
-    font-size: 0.75rem;    /* Reduced from 1.05rem for better balance */
+    font-size: 0.75rem;
     text-transform: uppercase;
     font-style: italic;
     letter-spacing: 1px;
+    /* Offset the letter-spacing to truly center the text */
+    text-indent: 1px;
     font-weight: 600;
     opacity: 1;
-    margin-top: 10.5px;      /* Maintained the wide breathing room */
+    margin-top: 10.5px;
     text-shadow: 
         -1px -1px 2px rgba(0, 0, 0, 0.9), 
         1px 1px 1px rgba(255, 255, 255, 0.1);
 }
-
 
 
        .raga-display-overlay {
@@ -1179,4 +1187,69 @@ html, body {
 /* Physical click feedback */
 #hold-btn:active {
     transform: scale(0.95);
+}
+
+/* Style for keys that are disabled by the Raga Filter */
+/* Base locked state */
+/* Base settings for any locked key */
+.key.raga-locked {
+    pointer-events: none;
+    cursor: default;
+    filter: none !important; /* Disabling filter to use solid colors instead */
+}
+
+/* White keys: turn them into a light, flat grey */
+.key.white.raga-locked {
+    background: #d1d1d1 !important; 
+    border-color: #bcbcbc !important;
+    opacity: 1; /* Keep opacity full to prevent 'ghosting' */
+}
+
+/* Black keys: turn them into a medium-dark flat grey */
+/* This prevents them from just looking like 'faded black' */
+.key.black.raga-locked {
+    background: #666666 !important; 
+    border-color: #555555 !important;
+    opacity: 1; 
+    box-shadow: none !important; /* Removes the 3D 'pop' */
+}
+
+/* Optional: Make the text on locked keys barely visible */
+.key.raga-locked .note-txt {
+    color: rgba(0, 0, 0, 0.2) !important;
+}
+
+
+.strict-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+
+.lock-icon-label {
+    font-size: 0.9rem; /* Slightly smaller to be less distracting */
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    
+    /* Dark, muted grey-brass when OFF */
+    filter: sepia(0.8) saturate(0.2) brightness(0.4);
+    opacity: 0.4;
+}
+
+/* Hover: just a slight lift in visibility */
+.lock-icon-label:hover {
+    opacity: 0.6;
+}
+
+/* Clean, Muted Antique Gold when ON */
+#strict-raga-toggle:checked ~ .lock-icon-label,
+.strict-control:has(#strict-raga-toggle:checked) .lock-icon-label {
+    opacity: 0.9;
+    /* Low saturation + lower brightness = Antique Brass, not bright gold */
+    filter: sepia(1) saturate(0.8) brightness(0.8);
+    text-shadow: none !important;
+    transform: none;
 }

@@ -98,6 +98,7 @@
       <span class="trans-val" id="trans-display">T</span>
       <button class="trans-btn trans-right">+</button>
    </div>
+
 </div>
          <canvas id="visualizer-canvas"></canvas>
          <div class="controls-grid">
@@ -141,11 +142,20 @@
 </div>
          <div class="switch-group" id="midi-control-group">
     <label for="midi-select" class="midi-label" id="midi-trigger">MIDI</label>
-    
     <select id="midi-select">
         <option value="">MIDI (OFF)</option>
     </select> 
 </div>
+<div class="control-item strict-control">
+    <label class="switch">
+        <input type="checkbox" id="strict-raga-toggle">
+        <span class="slider"></span>
+    </label>
+    <label for="strict-raga-toggle" class="lock-icon-label" title="Strict Raga">
+        &#x1F512;
+    </label>
+</div>
+
             </div>
          </div>
       </div>
