@@ -566,4 +566,134 @@ document.getElementById("strict-raga-toggle")?.addEventListener("change", e => {
 
 
 
+function prepareMidiTransport() {
+    Tone.Transport.stop();
 
+    Tone.Transport.cancel(); // Wipe previous file's notes
+
+    currentMidi.tracks.forEach(track => {
+        track.notes.forEach(note => {
+            const keyIdx = note.midi - 48;
+
+            // Only schedule if within range of your UI/Synth
+            if (keyIdx >= 0 && keyIdx < 100) { 
+                // Schedule ON
+                Tone.Transport.schedule((time) => {
+                    handleKeyPress(keyIdx, note.velocity);
+                    Tone.Draw.schedule(() => {
+                        document.querySelector(`.key[data-idx="${keyIdx}"]`)?.classList.add('active');
+                    }, time);
+                }, note.time);
+
+                // Schedule OFF
+                Tone.Transport.schedule((time) => {
+                    handleKeyRelease(keyIdx);
+                    Tone.Draw.schedule(() => {
+                        document.querySelector(`.key[data-idx="${keyIdx}"]`)?.classList.remove('active');
+                    }, time);
+                }, note.time + note.duration);
+            }
+        });
+    });
+}
+
+
+let currentMidi = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // renamed to avoid 'midi' conflict
+    const songFileInput = document.getElementById('song-file-input');
+    const songLabel = document.getElementById('song-label');
+    const playBtn = document.getElementById('midi-play');
+    const stopBtn = document.getElementById('midi-stop');
+    const progressBar = document.getElementById('midi-progress-bar');
+
+    if (songFileInput) {
+        songFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const arrayBuffer = await file.arrayBuffer();
+            currentMidi = new Midi(arrayBuffer);
+            
+            updateTempo(currentMidi.header.tempos[0]?.bpm || 120);
+            prepareMidiTransport();
+
+            songLabel.innerText = file.name.substring(0, 10) + "...";
+        });
+    }
+
+    playBtn?.addEventListener('click', async () => {
+        await Tone.start();
+        if (Tone.Transport.state === 'started') {
+            Tone.Transport.pause();
+            playBtn.innerText = '▶';
+        } else {
+            Tone.Transport.start();
+            playBtn.innerText = '⏸';
+            updateProgressBar(); // Start the visual loop
+        }
+    });
+
+    stopBtn?.addEventListener('click', () => {
+        Tone.Transport.stop();
+        playBtn.innerText = '▶';
+        if (progressBar) progressBar.style.width = '0%';
+        document.querySelectorAll('.key').forEach(k => k.classList.remove('active'));
+    });
+
+    // PROGRESS BAR LOGIC
+    function updateProgressBar() {
+        if (Tone.Transport.state === 'started' && currentMidi) {
+            const totalDuration = currentMidi.duration;
+            const currentSeconds = Tone.Transport.seconds;
+            const progress = (currentSeconds / totalDuration) * 100;
+            
+            if (progressBar) {
+                progressBar.style.width = Math.min(progress, 100) + '%';
+            }
+
+            if (progress < 100) {
+                requestAnimationFrame(updateProgressBar);
+            } else {
+                playBtn.innerText = '▶';
+            }
+        }
+    }
+});
+// Helper to ensure tempo UI stays in sync
+function updateTempo(val) {
+    const bpm = Math.round(val);
+    
+    // Set the engine speed
+    Tone.Transport.bpm.value = bpm;
+    
+    // Sync the UI elements
+    const display = document.getElementById('bpm-display');
+    const slider = document.getElementById('tempo-slider');
+    
+    if (display) display.innerText = bpm;
+    if (slider) {
+        slider.value = bpm;
+        // Optional: Update slider min/max if MIDI is very fast/slow
+        if (bpm > slider.max) slider.max = bpm + 20;
+        if (bpm < slider.min) slider.min = Math.max(10, bpm - 20);
+    }
+}
+
+
+
+const tempoSlider = document.getElementById('tempo-slider');
+const bpmDisplay = document.getElementById('bpm-display');
+
+if (tempoSlider) {
+    tempoSlider.addEventListener('input', (e) => {
+        const newBpm = parseFloat(e.target.value);
+        
+        // 1. Update the Tone.js Engine
+        Tone.Transport.bpm.value = newBpm;
+        
+        // 2. Update the UI Text
+        if (bpmDisplay) bpmDisplay.innerText = Math.round(newBpm);
+    });
+}

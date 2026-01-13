@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Harmonium Companion</title>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+      <script src="https://unpkg.com/@tonejs/midi"></script>
       <link
          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Montserrat:wght@300;400;600&display=swap"
          rel="stylesheet">
@@ -156,6 +157,33 @@
     </label>
 </div>
 
+
+<div class="transport-deck">
+    <div class="deck-section file-controls">
+        <input type="file" id="song-file-input" accept=".mid,.midi" style="display: none;">
+        <label for="song-file-input" class="brass-btn song-upload-label" id="song-label">
+            LOAD SONG
+        </label>
+    </div>
+
+    <div class="deck-section playback-controls">
+        <button id="midi-play" class="brass-btn transport-btn">▶</button>
+        <button id="midi-stop" class="brass-btn transport-btn">■</button>
+    </div>
+
+    <div class="deck-section progress-display">
+        <div class="midi-progress-container">
+            <div id="midi-progress-bar"></div>
+        </div>
+        <div class="tempo-control">
+    <div class="tempo-meta">
+        <span id="bpm-display">120</span>
+        <label class="tempo-label">BPM</label>
+    </div>
+    <input type="range" id="tempo-slider" min="40" max="240" value="120">
+</div>
+    </div>
+</div>
             </div>
          </div>
       </div>
