@@ -45,7 +45,7 @@ const ragaKeys = Object.keys(ragas);
 /* -------------------------
    AUDIO SETUP
 ------------------------- */
-const reverb = new Tone.Reverb({ decay: 4, wet: 0.3 }).toDestination();
+const reverb = new Tone.Reverb({ decay: 4, wet: 0 }).toDestination();
 const chorus = new Tone.Chorus(4,2.5,0.5).connect(reverb).start();
 chorus.wet.value = 0;
 
