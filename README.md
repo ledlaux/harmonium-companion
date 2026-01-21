@@ -28,8 +28,6 @@ Play in your browser 🎹 — Live Demo page: https://ledlaux.github.io/harmoniu
 ## 🧰 Technical Stack
 * **Core**: [Tone.js](https://tonejs.github.io/) for Web Audio synthesis.
 * **Graphics**: HTML5 Canvas for waveform visualization.
-* **Samples**: recorded harmonium samples by
-   [github.com/rtalwar26/midi-harmonium](https://github.com/rtalwar26/midi-harmonium.git)
 
 ---
 
