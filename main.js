@@ -40,19 +40,42 @@ const ragas = {
     "malkauns": [0,3,5,8,10]
 };
 let currentRagaIdx = 0;
+let isStrictRaga = false;
 const ragaKeys = Object.keys(ragas);
+
 
 /* -------------------------
    AUDIO SETUP
 ------------------------- */
 const reverb = new Tone.Reverb({ decay: 4, wet: 0 }).toDestination();
-const chorus = new Tone.Chorus(1.5, 3, 0.3).connect(reverb).start();
+const chorus = new Tone.Chorus(4,2.5,0).connect(reverb).start();
 chorus.wet.value = 0;
-
 const sampler = new Tone.Sampler({
-    urls: {"C3":"100_Sa_B_harmonium1_1.mp3","G3":"100_Pa_M_harmonium1_1.mp3","C4":"100_Sa_H_harmonium1_1.mp3"},
-    baseUrl:"https://raw.githubusercontent.com/rtalwar26/midi-harmonium/master/audio/harmonium/"
+    urls: {
+        // Bass notes (lower octave)
+        "A2": "A2.mp3",
+        "B2": "B2.mp3",
+        "G2": "G2.mp3",
+        "C3": "C3.mp3",
+
+        // Medium notes (main octave)
+        "A3": "A3.mp3",
+        "B3": "B3.mp3",
+        "G3": "G3.mp3",
+        "F3": "F3.mp3",
+        "E3": "E3.mp3",
+        "D3": "D3.mp3",
+        "C4": "C4.mp3",
+        "D4": "D4.mp3",
+        "E4": "E4.mp3",
+        "F4": "F4.mp3"
+
+      
+    },
+    baseUrl: "./audio/",
+    release: 0.1
 }).connect(chorus);
+
 
 /* Visualizer */
 const wave = new Tone.Waveform(512);
@@ -214,12 +237,26 @@ function handleMidiMessage(event) {
    NOTE LOGIC
 ------------------------- */
 function handleKeyPress(i, vel = 0.8) {
-    if (!isStarted) return;
+   if (!isStarted) return;
 
-    // TOGGLE: If Drone Mode is ON and note is already playing, turn it OFF.
+    // --- STRICT RAGA GATE ---
+    if (isStrictRaga) {
+        const selectedRaga = ragaKeys[currentRagaIdx];
+        const allowedNotes = ragas[selectedRaga];
+        
+        if (selectedRaga !== "none" && allowedNotes) {
+            // Subtract transposeShift to check the note's position relative to the root Sa
+            const adjustedIdx = i - transposeShift;
+            const logicalNote = ((adjustedIdx % 12) + 12) % 12;
+            
+            if (!allowedNotes.includes(logicalNote)) return; 
+        }
+    }
+
     if (isDroneMode && activeNotes.has(i)) {
         stopAudio(i);
-        heldKeys.delete(i);
+        heldKeys.add(i); // Still track the physical key state
+        heldKeys.delete(i); 
         return;
     }
 
@@ -242,18 +279,7 @@ function handleKeyRelease(i) {
     stopAudio(i);
 }
 
-function handleKeyRelease(i) {
-    heldKeys.delete(i);
-    
-    // In Drone Mode, we don't want the mouse-up/key-up to stop the sound.
-    // The sound only stops if toggleSustain is called or via the toggle in handleKeyPress.
-    if (isDroneMode || isSustain) { 
-        if (isSustain) sustainQueue.add(i); 
-        return; 
-    }
-    
-    stopAudio(i);
-}
+
 function startAudio(i, vel = 0.8) {
     if (activeNotes.has(i)) return;
 
@@ -418,24 +444,48 @@ function toggleNotation() {
 }
 
 function cycleRaga(dir){
-    currentRagaIdx+=dir; if(currentRagaIdx<0) currentRagaIdx=ragaKeys.length-1; if(currentRagaIdx>=ragaKeys.length) currentRagaIdx=0;
-    document.getElementById('current-raga-name').innerText=ragaKeys[currentRagaIdx]==='none'?'Chromatic':ragaKeys[currentRagaIdx];
+    currentRagaIdx += dir; 
+    if(currentRagaIdx < 0) currentRagaIdx = ragaKeys.length - 1; 
+    if(currentRagaIdx >= ragaKeys.length) currentRagaIdx = 0;
+    
+    const label = document.getElementById('current-raga-name');
+    label.innerText = ragaKeys[currentRagaIdx] === 'none' ? 'Chromatic' : ragaKeys[currentRagaIdx];
+    
+    // Maintain visual engagement on the label
+    label.classList.toggle('is-locked', isStrictRaga);
+    
+    // Refresh the keyboard colors and locking
     applyRagaFilter();
 }
 
-function applyRagaFilter(ragaName){
-    const selected=(ragaName||ragaKeys[currentRagaIdx]).toLowerCase();
-    const allowed=ragas[selected];
-    document.querySelectorAll('.key').forEach(el=>el.classList.remove('highlight-y','highlight-p','highlight-o','highlight-b','highlight-g','raga-dimmed'));
-    if(selected==="none"||!allowed) return;
-    let mask='highlight-y';
-    if(['bhairav','todi','bhopali','shree'].includes(selected)) mask='highlight-o';
-    else if(['malkauns','asavari','bhairavi','darbari'].includes(selected)) mask='highlight-b';
-    else if(['khamaj','kafi','desh'].includes(selected)) mask='highlight-g';
-    else if(['kalyan','purvi','marwa','yaman'].includes(selected)) mask='highlight-p';
-    document.querySelectorAll('.key').forEach(el=>{
-        const logicalNote=(parseInt(el.dataset.idx)+transposeShift+120)%12;
-        if(allowed.includes(logicalNote)) el.classList.add(mask); else el.classList.add('raga-dimmed');
+function applyRagaFilter(ragaName) {
+    const selected = (ragaName || ragaKeys[currentRagaIdx]).toLowerCase();
+    const allowed = ragas[selected];
+    
+    document.querySelectorAll('.key').forEach(el => {
+        // Reset visual states
+        el.classList.remove('highlight-y', 'highlight-p', 'highlight-o', 'highlight-b', 'highlight-g', 'raga-dimmed', 'raga-locked');
+        
+        if (selected === "none" || !allowed) return;
+
+        const i = parseInt(el.dataset.idx);
+        const adjustedIdx = i - transposeShift;
+        const logicalNote = ((adjustedIdx % 12) + 12) % 12;
+
+        if (allowed.includes(logicalNote)) {
+            // Apply raga colors
+            let mask = 'highlight-y';
+            if (['kalyan','purvi','marwa'].includes(selected)) mask = 'highlight-p';
+            if (['bhairav','todi','bhopali','shree'].includes(selected)) mask = 'highlight-o';
+            if (['malkauns','asavari','bhairavi'].includes(selected)) mask = 'highlight-b';
+            if (['khamaj','kafi','desh'].includes(selected)) mask = 'highlight-g';
+            el.classList.add(mask);
+        } else {
+            // Check the global variable here:
+            // If isStrictRaga is true, we use raga-locked (usually dark/disabled)
+            // Otherwise, we use raga-dimmed (faded but playable)
+            el.classList.add(isStrictRaga ? 'raga-locked' : 'raga-dimmed');
+        }
     });
 }
 
@@ -501,6 +551,32 @@ window.addEventListener('dragstart', (e) => {
     e.preventDefault();
 }, false);
 
+//document.getElementById("strict-raga-toggle")?.addEventListener("change", e => {
+//    isStrictRaga = e.target.checked;
+//    // Visually update the keys immediately
+//    applyRagaFilter(); 
+//});
+
+//document.getElementById("strict-raga-toggle")?.addEventListener("change", e => {
+//    isStrictRaga = e.target.checked;
+ //   applyRagaFilter(); // Refresh visual state immediately
+//});
+
+const ragaNameLabel = document.getElementById('current-raga-name');
+
+if (ragaNameLabel) {
+    ragaNameLabel.addEventListener("click", () => {
+        // Toggle logical state
+        isStrictRaga = !isStrictRaga;
+        
+        // Toggle the visual class
+        ragaNameLabel.classList.toggle('is-locked', isStrictRaga);
+        
+        // Refresh keys
+        applyRagaFilter();
+    });
+}
+
 
     // ----- KEYBOARD & PUMP HANDLER -----
     window.onkeydown = (e) => {
@@ -532,5 +608,134 @@ window.addEventListener('dragstart', (e) => {
 };
 
 
+let currentMidi = null;
+let animationFrameId = null; // To track and stop the loop
+
+document.addEventListener('DOMContentLoaded', () => {
+    const songFileInput = document.getElementById('song-file-input');
+    const songLabel = document.getElementById('song-label');
+    const playBtn = document.getElementById('midi-play');
+    const stopBtn = document.getElementById('midi-stop');
+    const progressBar = document.getElementById('midi-progress-bar');
+    const progressContainer = document.querySelector('.midi-progress-container');
+    const tempoSlider = document.getElementById('tempo-slider');
+
+    // --- 1. MIDI FILE LOADING ---
+    songFileInput?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            currentMidi = new Midi(arrayBuffer);
+            
+            // Sync UI and Transport
+            const midiBpm = currentMidi.header.tempos[0]?.bpm || 120;
+            updateTempo(midiBpm);
+            prepareMidiTransport();
+
+            if (songLabel) songLabel.innerText = file.name.substring(0, 10) + "...";
+        } catch (err) {
+            console.error("Midi Load Error:", err);
+        }
+    });
+
+    // --- 2. TRANSPORT CONTROLS ---
+    playBtn?.addEventListener('click', async () => {
+        await Tone.start();
+        if (Tone.Transport.state === 'started') {
+            Tone.Transport.pause();
+            playBtn.innerText = '▶';
+        } else {
+            Tone.Transport.start();
+            playBtn.innerText = '⏸';
+            startProgressLoop(); // Start the single loop
+        }
+    });
+
+    stopBtn?.addEventListener('click', () => {
+        Tone.Transport.stop();
+        if (playBtn) playBtn.innerText = '▶';
+        if (progressBar) progressBar.style.width = '0%';
+        
+        // Panic: Kill all sound and UI highlights
+        cancelAnimationFrame(animationFrameId);
+        document.querySelectorAll('.key').forEach(k => {
+            k.classList.remove('active', 'midi-active');
+            handleKeyRelease(parseInt(k.dataset.idx)); 
+        });
+    });
+
+    // --- 3. TEMPO & PROGRESS LOGIC ---
+    tempoSlider?.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        Tone.Transport.bpm.value = val;
+        const display = document.getElementById('bpm-display');
+        if (display) display.innerText = Math.round(val);
+    });
+
+    progressContainer?.addEventListener('click', (e) => {
+        if (!currentMidi) return;
+        const rect = progressContainer.getBoundingClientRect();
+        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        
+        Tone.Transport.seconds = percent * currentMidi.duration;
+        if (progressBar) progressBar.style.width = (percent * 100) + '%';
+    });
+});
+
+// --- HELPER FUNCTIONS ---
+
+function prepareMidiTransport() {
+    Tone.Transport.cancel(); // Wipe previous schedule
+
+    currentMidi.tracks.forEach(track => {
+        track.notes.forEach(note => {
+            const keyIdx = note.midi - 48;
+            if (keyIdx >= 0 && keyIdx < 100) { 
+                Tone.Transport.schedule((time) => {
+                    handleKeyPress(keyIdx, note.velocity);
+                    Tone.Draw.schedule(() => {
+                        document.querySelector(`.key[data-idx="${keyIdx}"]`)?.classList.add('midi-active');
+                    }, time);
+                }, note.time);
+
+                Tone.Transport.schedule((time) => {
+                    handleKeyRelease(keyIdx);
+                    Tone.Draw.schedule(() => {
+                        document.querySelector(`.key[data-idx="${keyIdx}"]`)?.classList.remove('midi-active');
+                    }, time);
+                }, note.time + note.duration);
+            }
+        });
+    });
+}
+
+function startProgressLoop() {
+    // Prevent multiple loops from running at once
+    cancelAnimationFrame(animationFrameId);
+    
+    const update = () => {
+        const progressBar = document.getElementById('midi-progress-bar');
+        if (currentMidi && Tone.Transport.state === 'started') {
+            const progress = (Tone.Transport.seconds / currentMidi.duration) * 100;
+            if (progressBar) progressBar.style.width = Math.min(progress, 100) + '%';
+        }
+        animationFrameId = requestAnimationFrame(update);
+    };
+    update();
+}
+
+function updateTempo(val) {
+    const bpm = Math.round(val);
+    Tone.Transport.bpm.value = bpm;
+    const slider = document.getElementById('tempo-slider');
+    const display = document.getElementById('bpm-display');
+    if (slider) slider.value = bpm;
+    if (display) display.innerText = bpm;
+}
 
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
