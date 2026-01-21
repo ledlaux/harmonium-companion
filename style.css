@@ -1025,6 +1025,7 @@ opacity: 0.9;
 #hold-btn:active {
 transform: scale(0.95);
 }
+/*
 @media (pointer: coarse) and (hover: none) {
 html, body {
 width: 100vw;
@@ -1091,6 +1092,7 @@ height: 100vh;
 position: relative;
 overflow: hidden;
 }
+*/
 .raga-name-display {
 cursor: pointer;
 user-select: none;
@@ -1118,13 +1120,4 @@ background-color: #f9f9f9 !important;
 display: none !important;
 }
 
-
-
-/* Removes the blue focus outline on all inputs and buttons */
-input:focus, 
-button:focus, 
-.key:focus {
-    outline: none !important;
-    -webkit-tap-highlight-color: transparent; /* Removes the grey/blue flash on mobile */
-}
 
