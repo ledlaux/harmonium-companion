@@ -166,7 +166,7 @@ text-shadow: 0 0 3px rgba(212, 175, 55, 0.4);
 .zoom-viewport {
 position: relative;
 width: 850px;
-transform: scale(1.6) translateY(2.9%);
+transform: scale(1.45) translateY(2.9%);
 transform-origin: center center;
 line-height: 0;
 .refresh-btn {
