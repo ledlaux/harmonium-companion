@@ -346,16 +346,28 @@ function startAudio(i, vel = 0.8) {
 
     const totalShift = transposeShift + octaveShift * 12;
     const baseOctave = 2; 
-    const pitch = Tone.Frequency(scale[((i % 12) + 12) % 12] + (baseOctave + Math.floor(i / 12))).transpose(totalShift);
-    const noteName = pitch.toNote();
+    const noteName = scale[i % 12] + (baseOctave + Math.floor(i / 12));
+    const pitch = Tone.Frequency(noteName);
 
-    sampler.triggerAttack(noteName, Tone.now(), vel);
-    if (isCoupler) sampler.triggerAttack(pitch.transpose(12).toNote(), Tone.now(), vel * 0.5);
-    if (isSubOct) sampler.triggerAttack(pitch.transpose(-12).toNote(), Tone.now(), vel * 0.5);
+    // MAIN note
+    const mainNote = pitch.transpose(totalShift).toNote();
+    sampler.triggerAttack(mainNote, Tone.now(), vel);
 
-    // Save state once
+    // COUPLER: exactly 1 octave above main note
+    if (isCoupler) {
+        const couplerNote = pitch.transpose(12).transpose(totalShift).toNote();
+        sampler.triggerAttack(couplerNote, Tone.now(), vel * 0.5);
+    }
+
+    // SUB-OCTAVE: exactly 1 octave below main note
+    if (isSubOct) {
+        const subOctNote = pitch.transpose(-12).transpose(totalShift).toNote();
+        sampler.triggerAttack(subOctNote, Tone.now(), vel * 0.5);
+    }
+
+    // Save state
     activeNotes.set(i, { 
-        name: noteName, 
+        name: mainNote, 
         vel: vel,
         couplerActive: isCoupler, 
         subOctActive: isSubOct 
@@ -364,6 +376,7 @@ function startAudio(i, vel = 0.8) {
     const el = document.querySelector(`[data-idx="${i}"]`);
     if (el) el.classList.add('active');
 }
+
 
 function stopAudio(i) {
     const d = activeNotes.get(i);
@@ -381,22 +394,26 @@ function stopAudio(i) {
 }
 
 function refreshAudio(forceRestart = false) {
+    const totalShift = transposeShift + octaveShift * 12;
+
     if (forceRestart) {
+        // Stop all active notes
         const notesToRestart = Array.from(activeNotes.entries());
         notesToRestart.forEach(([i]) => {
             stopAudio(i);
         });
+        // Restart them with stored velocity
         notesToRestart.forEach(([i, d]) => {
             startAudio(i, d.vel);
         });
     } else {
+        // Update coupler/sub-octave state without restarting main note
         activeNotes.forEach((d, i) => {
-            const totalShift = transposeShift + octaveShift * 12;
-            const pitch = Tone.Frequency(scale[((i % 12) + 12) % 12] + (3 + Math.floor(i / 12))).transpose(totalShift);
-            
-            const couplerNote = pitch.transpose(12).toNote();
-            const subOctNote = pitch.transpose(-12).toNote();
+            const baseOctave = 2;
+            const pitch = Tone.Frequency(scale[i % 12] + (baseOctave + Math.floor(i / 12)));
 
+            // COUPLER: 1 octave above main note
+            const couplerNote = pitch.transpose(12).transpose(totalShift).toNote();
             if (isCoupler && !d.couplerActive) {
                 sampler.triggerAttack(couplerNote, Tone.now(), d.vel * 0.5);
                 d.couplerActive = true;
@@ -405,6 +422,8 @@ function refreshAudio(forceRestart = false) {
                 d.couplerActive = false;
             }
 
+            // SUB-OCTAVE: 1 octave below main note
+            const subOctNote = pitch.transpose(-12).transpose(totalShift).toNote();
             if (isSubOct && !d.subOctActive) {
                 sampler.triggerAttack(subOctNote, Tone.now(), d.vel * 0.5);
                 d.subOctActive = true;
