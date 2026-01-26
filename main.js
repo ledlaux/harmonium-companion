@@ -20,8 +20,11 @@ const activeNotes = new Map(),
 
 const scale = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const indianScale = ["Sa","re","Re","ga","Ga","Ma","ma","Pa","dha","Dha","ni","Ni"];
-const keyMap = {'a':0,'w':1,'s':2,'e':3,'d':4,'f':5,'t':6,'g':7,'y':8,'h':9,'u':10,'j':11,'k':12,'o':13,'l':14,'p':15,';':16,"'":17};
-
+const keyMap = {
+    'a':12, 'w':13, 's':14, 'e':15, 'd':16, 'f':17, 't':18, 
+    'g':19, 'y':20, 'h':21, 'u':22, 'j':23, 'k':24, 'o':25, 
+    'l':26, 'p':27, ';':28, "'":29
+};
 const ragas = {
     "none": [],
     "bilawal": [0,2,4,5,7,9,11],
@@ -52,13 +55,10 @@ const chorus = new Tone.Chorus(4,2.5,0).connect(reverb).start();
 chorus.wet.value = 0;
 const sampler = new Tone.Sampler({
     urls: {
-        // Bass notes (lower octave)
         "A2": "A2.mp3",
         "B2": "B2.mp3",
         "G2": "G2.mp3",
         "C3": "C3.mp3",
-
-        // Medium notes (main octave)
         "A3": "A3.mp3",
         "B3": "B3.mp3",
         "G3": "G3.mp3",
@@ -69,8 +69,6 @@ const sampler = new Tone.Sampler({
         "D4": "D4.mp3",
         "E4": "E4.mp3",
         "F4": "F4.mp3"
-
-      
     },
     baseUrl: "./audio/",
     release: 0.1
@@ -87,24 +85,90 @@ const canvas = document.getElementById('visualizer-canvas'), ctx = canvas.getCon
 ------------------------- */
 function initKeyboard() {
     const kb = document.getElementById('keyboard');
+    const kbWrapper = document.querySelector('.keyboard-wrapper');
+    if (!kb || !kbWrapper) return;
+
     kb.innerHTML = '';
-    for (let i = 0; i < 22; i++) {
+
+    let isDown = false;
+    let startX, scrollLeft, mouseStartX, mouseStartY, activeKeyIdx = null;
+
+    // 48 keys (4 Octaves)
+    for (let i = 0; i < 48; i++) {
         const k = document.createElement('div');
-        k.className = `key ${scale[i%12].includes('#') ? 'black':'white'}`;
+        const noteName = scale[i % 12];
+        
+        // VISUAL LABEL: Starts at C2
+        const displayOctave = Math.floor(i / 12) + 2; 
+        
+        k.className = `key ${noteName.includes('#') ? 'black' : 'white'}`;
         k.dataset.idx = i;
-        k.innerHTML = `<span class="note-txt"></span>`;
+        k.innerHTML = `<span class="note-txt">${noteName}${displayOctave}</span>`;
         kb.appendChild(k);
 
         k.onmousedown = e => {
-            e.preventDefault();
+            isDown = true;
+            kbWrapper.classList.add('grabbing');
+            startX = e.pageX - kbWrapper.offsetLeft;
+            scrollLeft = kbWrapper.scrollLeft;
+            mouseStartX = e.clientX;
+            mouseStartY = e.clientY;
+            activeKeyIdx = i;
+
+            k.classList.add('active');
             const rect = k.getBoundingClientRect();
-            const y = e.clientY - rect.top;
-            const velocity = (y / rect.height) * 0.7 + 0.3;
+            const velocity = ((e.clientY - rect.top) / rect.height) * 0.7 + 0.3;
             handleKeyPress(i, velocity);
         };
-        k.onmouseup = () => handleKeyRelease(i);
-        k.onmouseleave = () => handleKeyRelease(i);
     }
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+
+        const diffX = Math.abs(e.clientX - mouseStartX);
+        const diffY = Math.abs(e.clientY - mouseStartY);
+        
+        // Threshold: 30px ensures NO movement while clicking
+        if (diffX > 76 || diffY > 76) {
+                if (activeKeyIdx !== null) {
+                const activeKey = kb.querySelector(`[data-idx="${activeKeyIdx}"]`);
+                if (activeKey) activeKey.classList.remove('active');
+                handleKeyRelease(activeKeyIdx);
+                startX = e.pageX - kbWrapper.offsetLeft;
+                scrollLeft = kbWrapper.scrollLeft;
+                
+                activeKeyIdx = null; 
+            }
+
+            const x = e.pageX - kbWrapper.offsetLeft;
+            const walk = (x - startX) * 0.6; 
+            kbWrapper.scrollLeft = scrollLeft - walk;
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (activeKeyIdx !== null) {
+            const activeKey = kb.querySelector(`[data-idx="${activeKeyIdx}"]`);
+            if (activeKey) activeKey.classList.remove('active');
+            handleKeyRelease(activeKeyIdx);
+        }
+        isDown = false;
+        activeKeyIdx = null;
+        kbWrapper.classList.remove('grabbing');
+    });
+
+    // Initial Center: C4 (Index 24)
+  setTimeout(() => {
+    const kb = document.getElementById('keyboard');
+    const kbWrapper = document.querySelector('.keyboard-wrapper');
+    const targetKey = kb.querySelector('[data-idx="5"]'); // C3
+
+    if (targetKey && kbWrapper) {
+        // Adding +1 to the offset handles the sub-pixel gap 
+        // and hides the sliver of the previous key.
+        kbWrapper.scrollLeft = targetKey.offsetLeft + 1;
+    }
+}, 300);
 }
 
 /* -------------------------
@@ -245,7 +309,6 @@ function handleKeyPress(i, vel = 0.8) {
         const allowedNotes = ragas[selectedRaga];
         
         if (selectedRaga !== "none" && allowedNotes) {
-            // Subtract transposeShift to check the note's position relative to the root Sa
             const adjustedIdx = i - transposeShift;
             const logicalNote = ((adjustedIdx % 12) + 12) % 12;
             
@@ -255,7 +318,7 @@ function handleKeyPress(i, vel = 0.8) {
 
     if (isDroneMode && activeNotes.has(i)) {
         stopAudio(i);
-        heldKeys.add(i); // Still track the physical key state
+        heldKeys.add(i); 
         heldKeys.delete(i); 
         return;
     }
@@ -267,8 +330,6 @@ function handleKeyPress(i, vel = 0.8) {
 
 function handleKeyRelease(i) {
     heldKeys.delete(i);
-    
-    // EXPLICIT CHECK: If Drone is on, don't stop the audio on release
     if (isDroneMode) return;
 
     if (isSustain) {
@@ -284,7 +345,7 @@ function startAudio(i, vel = 0.8) {
     if (activeNotes.has(i)) return;
 
     const totalShift = transposeShift + octaveShift * 12;
-    const baseOctave = 3; 
+    const baseOctave = 2; 
     const pitch = Tone.Frequency(scale[((i % 12) + 12) % 12] + (baseOctave + Math.floor(i / 12))).transpose(totalShift);
     const noteName = pitch.toNote();
 
@@ -307,8 +368,6 @@ function startAudio(i, vel = 0.8) {
 function stopAudio(i) {
     const d = activeNotes.get(i);
     if (!d) return;
-
-    // Release base note plus both potential side notes
     const p = Tone.Frequency(d.name);
     sampler.triggerRelease([
         d.name,
@@ -323,20 +382,14 @@ function stopAudio(i) {
 
 function refreshAudio(forceRestart = false) {
     if (forceRestart) {
-        // 1. Create a static snapshot of current notes to avoid modifying Map during iteration
         const notesToRestart = Array.from(activeNotes.entries());
-        
-        // 2. Clear all current sounds
         notesToRestart.forEach(([i]) => {
             stopAudio(i);
         });
-
-        // 3. Restart them (startAudio will now use the updated transpose/octave shifts)
         notesToRestart.forEach(([i, d]) => {
             startAudio(i, d.vel);
         });
     } else {
-        // Smooth Toggle Logic for Coupler/Sub-Oct (No restart)
         activeNotes.forEach((d, i) => {
             const totalShift = transposeShift + octaveShift * 12;
             const pitch = Tone.Frequency(scale[((i % 12) + 12) % 12] + (3 + Math.floor(i / 12))).transpose(totalShift);
@@ -373,16 +426,12 @@ function setTranspose(dir) {
     
     toggleNotation();
     applyRagaFilter();
-    refreshAudio(true); // <--- Add true here to restart notes with new pitch
+    refreshAudio(true); 
 }
 
 function setOctave(v) {
     octaveShift = v;
-
-    // 1. Remove active class from ALL possible LEDs
     document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
-
-    // 2. Explicitly map the value to the ID to prevent calculation errors
     let targetId = "";
     if (v === -1) targetId = "oct-low";
     else if (v === 0) targetId = "oct-mid";
@@ -429,17 +478,25 @@ function toggleNotation() {
             } else {
                 noteTxt.innerHTML = finalHTML;
             }
-        } else {
-            // --- Western Mode (Restored Octave Numbers) ---
-            const noteName = scale[labelIdx];
-            let currentOctave = Math.floor(i / 12) + 3 + octaveShift;
+      } else {
+    // --- Western Mode (Corrected) ---
+    const noteName = scale[labelIdx];
+    
+    // 1. Calculate the 'natural' octave of the physical key (0-11=2, 12-23=3, etc.)
+    let physicalOctave = Math.floor(i / 12) + 2;
 
-            if (noteName === "C") {
-                noteTxt.innerHTML = `${noteName}<span class="octave-num">${currentOctave}</span>`;
-            } else {
-                noteTxt.innerText = noteName;
-            }
-        }
+    // 2. Add the button shift, but clamp it so we never see C1 or C6
+    let currentOctave = physicalOctave + octaveShift;
+
+
+    const noteTxt = k.querySelector('.note-txt');
+    if (noteName === "C") {
+        // Only show octave number on 'C' keys for a cleaner look
+        noteTxt.innerHTML = `${noteName}<span class="octave-num">${currentOctave}</span>`;
+    } else {
+        noteTxt.innerText = noteName;
+    }
+}
     });
 }
 
@@ -473,7 +530,6 @@ function applyRagaFilter(ragaName) {
         const logicalNote = ((adjustedIdx % 12) + 12) % 12;
 
         if (allowed.includes(logicalNote)) {
-            // Apply raga colors
             let mask = 'highlight-y';
             if (['kalyan','purvi','marwa'].includes(selected)) mask = 'highlight-p';
             if (['bhairav','todi','bhopali','shree'].includes(selected)) mask = 'highlight-o';
@@ -481,9 +537,6 @@ function applyRagaFilter(ragaName) {
             if (['khamaj','kafi','desh'].includes(selected)) mask = 'highlight-g';
             el.classList.add(mask);
         } else {
-            // Check the global variable here:
-            // If isStrictRaga is true, we use raga-locked (usually dark/disabled)
-            // Otherwise, we use raga-dimmed (faded but playable)
             el.classList.add(isStrictRaga ? 'raga-locked' : 'raga-dimmed');
         }
     });
@@ -566,10 +619,7 @@ const ragaNameLabel = document.getElementById('current-raga-name');
 
 if (ragaNameLabel) {
     ragaNameLabel.addEventListener("click", () => {
-        // Toggle logical state
         isStrictRaga = !isStrictRaga;
-        
-        // Toggle the visual class
         ragaNameLabel.classList.toggle('is-locked', isStrictRaga);
         
         // Refresh keys
@@ -609,7 +659,7 @@ if (ragaNameLabel) {
 
 
 let currentMidi = null;
-let animationFrameId = null; // To track and stop the loop
+let animationFrameId = null; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const songFileInput = document.getElementById('song-file-input');
@@ -649,7 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             Tone.Transport.start();
             playBtn.innerText = '⏸';
-            startProgressLoop(); // Start the single loop
+            startProgressLoop(); 
         }
     });
 
@@ -687,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- HELPER FUNCTIONS ---
 
 function prepareMidiTransport() {
-    Tone.Transport.cancel(); // Wipe previous schedule
+    Tone.Transport.cancel(); 
 
     currentMidi.tracks.forEach(track => {
         track.notes.forEach(note => {
@@ -712,7 +762,6 @@ function prepareMidiTransport() {
 }
 
 function startProgressLoop() {
-    // Prevent multiple loops from running at once
     cancelAnimationFrame(animationFrameId);
     
     const update = () => {
