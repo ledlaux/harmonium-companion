@@ -24,6 +24,7 @@ Play in your browser 🎹 — Live Demo page: https://ledlaux.github.io/harmoniu
 | **Pump Bellows** | Spacebar |
 | **Sustain** | Shift key |
 | **Keyboard scroll** | Click and drag |
+| **Filter notes** | Click raga name |
 
 
 ---
