@@ -13,7 +13,7 @@ Play in your browser 🎹 — Live Demo page: https://ledlaux.github.io/harmoniu
 * **Effects**: Adjustable Chorus and Reverb to experiment with acoustics.
 * **MIDI Support**: WebMIDI plug-and-play.
 
-* **In development:** drone mode, pwa mobile app, .mid file loading and visual keyboard player, scrollable keyboard, midi cc.
+* **In development:** drone mode, pwa mobile app, .mid file loading and visual keyboard player, midi cc.
 
 ---
 
