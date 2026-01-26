@@ -23,6 +23,7 @@ Play in your browser 🎹 — Live Demo page: https://ledlaux.github.io/harmoniu
 | **Play Notes** | Keyboard and MIDI |
 | **Pump Bellows** | Spacebar |
 | **Sustain** | Shift key |
+| **Keyboard scroll** | Click and drag |
 
 
 ---
