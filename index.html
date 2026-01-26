@@ -108,7 +108,10 @@
          <div class="controls-grid">
             <div class="knob-container">
                <span class="knob__label">Volume</span>
-               <input type="range" id="vol" min="-40" max="0" value="-7">
+              <input type="range" id="vol" min="0" max="1" step="0.001" value="0.8">
+
+
+
             </div>
             <div class="knob-container">
                <span class="knob__label">Sustain</span>
@@ -123,9 +126,11 @@
                <input type="range" id="rev" min="0" max="1" step="0.01" value="0">
             </div>
          </div>
-         <div class="keyboard-wrapper">
-            <div id="keyboard" class="keyboard"></div>
-         </div>
+   
+    <div class="keyboard-wrapper">
+        <div id="keyboard" class="keyboard"></div>
+    </div>
+
          <div class="master-panel">
             <div class="switch-group">
                <span class="toggle-label">Sub-Oct</span>

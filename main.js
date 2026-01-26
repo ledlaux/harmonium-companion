@@ -11,7 +11,7 @@ let octaveShift = 0,
     isCoupler = false,
     isSubOct = false,
     isSustain = false,
-    baseVol = -12,
+ baseVol = 0.8;       // slider value (0-1)
     pumpCharge = 0;
 
 const activeNotes = new Map(),
@@ -128,7 +128,7 @@ function initKeyboard() {
         const diffX = Math.abs(e.clientX - mouseStartX);
         const diffY = Math.abs(e.clientY - mouseStartY);
         
-        // Threshold: 30px ensures NO movement while clicking
+        // Threshold: 76px ensures NO movement while clicking
         if (diffX > 76 || diffY > 76) {
                 if (activeKeyIdx !== null) {
                 const activeKey = kb.querySelector(`[data-idx="${activeKeyIdx}"]`);
@@ -164,8 +164,6 @@ function initKeyboard() {
     const targetKey = kb.querySelector('[data-idx="5"]'); // C3
 
     if (targetKey && kbWrapper) {
-        // Adding +1 to the offset handles the sub-pixel gap 
-        // and hides the sliver of the previous key.
         kbWrapper.scrollLeft = targetKey.offsetLeft + 1;
     }
 }, 300);
@@ -208,8 +206,11 @@ function setupUIButtons() {
     });
 
     // Sliders
-    document.getElementById('vol')?.addEventListener("input", e => baseVol = parseFloat(e.target.value));
-    document.getElementById('sus')?.addEventListener("input", e => sampler.release = parseFloat(e.target.value));
+document.getElementById('vol')?.addEventListener("input", e => {
+    // Map 0–1 slider to baseVol (we’ll handle zero separately)
+    const val = parseFloat(e.target.value);
+    baseVol = val;
+});    document.getElementById('sus')?.addEventListener("input", e => sampler.release = parseFloat(e.target.value));
     document.getElementById('rev')?.addEventListener("input", e => reverb.wet.value = parseFloat(e.target.value));
     document.getElementById('chorus-slider')?.addEventListener("input", e => {
         const val = parseFloat(e.target.value);
@@ -259,20 +260,12 @@ async function setupMIDI() {
 
         select.onchange = () => {
             const portId = select.value;
-
-            // Reset all inputs
             inputs.forEach(input => input.onmidimessage = null);
-
-            // If no device selected → LED off
             if (!portId) {
                 midiGroup.classList.remove('active');
                 return;
             }
-
-            // Activate LED
             midiGroup.classList.add('active');
-
-            // Assign the MIDI callback
             const input = inputs.find(i => i.id === portId);
             if (input) input.onmidimessage = handleMidiMessage;
         };
@@ -286,10 +279,7 @@ function handleMidiMessage(event) {
     const isNoteOn = (status & 0xf0) === 0x90;
     const isNoteOff = ((status & 0xf0) === 0x80) || (isNoteOn && velocity === 0);
     const vel = velocity / 127;
-
-    // Use 36 (C2) as the floor to ensure common MIDI keyboards 
-    // align better with the harmonium's starting range.
-    const harmoniumIdx = note - 36; 
+    const harmoniumIdx = note - 48; 
 
     if (isNoteOn && vel > 0) {
         handleKeyPress(harmoniumIdx, vel);
@@ -577,14 +567,27 @@ function toggleSustain(s){
 /* -------------------------
    VISUALIZER & MANUAL LOOP
 ------------------------- */
-function loop(){
-    if(isManual){
-        reservoir=Math.min(100,reservoir+(pumpCharge*0.12));
-        pumpCharge*=0.85;
-        reservoir=Math.max(0,reservoir-(0.05+activeNotes.size*0.04));
+function loop() {
+    if (isManual) {
+        const targetFill = Math.min(100, reservoir + pumpCharge); 
+        reservoir += (targetFill - reservoir) * 0.075; 
+        pumpCharge *= 0.95; 
+        const drain = 0.02 + activeNotes.size * 0.03; 
+        reservoir = Math.max(0, reservoir - drain);
     }
-    document.getElementById('air-fill').style.width=reservoir+"%";
-    sampler.volume.rampTo(isManual?(reservoir<0.01?-100:baseVol+Tone.gainToDb(reservoir/70)):baseVol,0.1);
+
+    document.getElementById('air-fill').style.width = reservoir + "%";
+
+    let gainValue = isManual
+        ? baseVol * (reservoir / 70)   
+        : baseVol;                     
+
+    const volDb = gainValue <= 0.00001 
+        ? -100 
+        : Tone.gainToDb(gainValue);
+
+    sampler.volume.rampTo(volDb, 0.1);
+
     requestAnimationFrame(loop);
 }
 
@@ -594,7 +597,7 @@ function drawVisualizer(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.beginPath(); ctx.strokeStyle="rgba(212,175,55,0.8)"; ctx.lineWidth=1;
     for(let i=0;i<512;i++){
-        const x=(i/512)*canvas.width, y=(0.5+b[i]*0.4)*canvas.height;
+        const x=(i/512)*canvas.width, y=(0.5+b[i]*0.20)*canvas.height;
         if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     }
     ctx.stroke();
