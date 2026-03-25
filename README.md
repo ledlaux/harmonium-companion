@@ -1,6 +1,6 @@
 # 🎹 Harmonium Companion
 
-Play in your browser 🎹 — Live Demo page: https://ledlaux.github.io/harmonium-companion/
+Play in your browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-companion/)  
 
 ![](https://github.com/ledlaux/harmonium-companion/blob/main/images/harmonium-companion.jpg
 )
