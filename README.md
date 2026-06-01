@@ -15,7 +15,7 @@ Play in your browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-co
 * **Effects**: Adjustable Chorus and Reverb to experiment with acoustics.
 * **MIDI Support**: WebMIDI plug-and-play.
 
-* **In development:** drone mode, pwa mobile app, .mid file loading and visual keyboard player, midi cc.
+* **In development:** pwa mobile app, .mid file loading and visual keyboard player, midi cc.
 
 ---
 
@@ -24,7 +24,7 @@ Play in your browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-co
 | :--- | :--- |
 | **Play Notes** | Keyboard and MIDI |
 | **Pump Bellows** | Spacebar |
-| **Sustain** | Shift key |
+| **Hold notes** | Shift key |
 | **Keyboard scroll** | Click and drag |
 | **Filter notes** | Click raga name |
 
@@ -32,7 +32,7 @@ Play in your browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-co
 ---
 
 ## 🧰 Technical Stack
-* **Core**: [Tone.js](https://tonejs.github.io/) for Web Audio synthesis.
+* **Core**: [Spessasynth](https://github.com/spessasus/spessasynth_core) for SF2 processing and Web Audio synthesis.
 * **Graphics**: HTML5 Canvas for waveform visualization.
 
 ---
