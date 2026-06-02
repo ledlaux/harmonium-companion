@@ -1,4 +1,3 @@
-
 import { WorkletSynthesizer } from "https://unpkg.com/spessasynth_lib@4.3.0/dist/index.js";
 
 let octaveShift = 0,
@@ -20,12 +19,15 @@ const activeNotes = new Map(),
       sustainQueue = new Set();
 
 const scale = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+
 const indianScale = ["Sa","re","Re","ga","Ga","Ma","ma","Pa","dha","Dha","ni","Ni"];
+
 const keyMap = {
     'a':12, 'w':13, 's':14, 'e':15, 'd':16, 'f':17, 't':18, 
     'g':19, 'y':20, 'h':21, 'u':22, 'j':23, 'k':24, 'o':25, 
     'l':26, 'p':27, ';':28, "'":29
 };
+
 const ragas = {
     "none": [],
     "bilawal": [0,2,4,5,7,9,11],
@@ -44,88 +46,12 @@ const ragas = {
     "malkauns": [0,3,5,8,10]
 };
 let currentRagaIdx = 0;
+
 let isStrictRaga = false;
+
 const ragaKeys = Object.keys(ragas);
 
 const canvas = document.getElementById('visualizer-canvas'), ctx = canvas.getContext('2d');
-
-// function initKeyboard() {
-//     const kb = document.getElementById('keyboard');
-//     const kbWrapper = document.querySelector('.keyboard-wrapper');
-//     if (!kb || !kbWrapper) return;
-
-//     kb.innerHTML = '';
-
-//     let isDown = false;
-//     let startX, scrollLeft, mouseStartX, mouseStartY, activeKeyIdx = null;
-
-//     for (let i = 0; i < 48; i++) {
-//         const k = document.createElement('div');
-//         const noteName = scale[i % 12];
-//         const displayOctave = Math.floor(i / 12) + 2; 
-        
-//         k.className = `key ${noteName.includes('#') ? 'black' : 'white'}`;
-//         k.dataset.idx = i;
-//         k.innerHTML = `<span class="note-txt">${noteName}${displayOctave}</span>`;
-//         kb.appendChild(k);
-
-//         k.onmousedown = e => {
-//             isDown = true;
-//             kbWrapper.classList.add('grabbing');
-//             startX = e.pageX - kbWrapper.offsetLeft;
-//             scrollLeft = kbWrapper.scrollLeft;
-//             mouseStartX = e.clientX;
-//             mouseStartY = e.clientY;
-//             activeKeyIdx = i;
-
-//             k.classList.add('active');
-//             const rect = k.getBoundingClientRect();
-//             const velocity = ((e.clientY - rect.top) / rect.height) * 0.7 + 0.3;
-//             handleKeyPress(i, velocity);
-//         };
-//     }
-
-//     window.addEventListener('mousemove', (e) => {
-//         if (!isDown) return;
-
-//         const diffX = Math.abs(e.clientX - mouseStartX);
-//         const diffY = Math.abs(e.clientY - mouseStartY);
-        
-//         if (diffX > 76 || diffY > 76) {
-//             if (activeKeyIdx !== null) {
-//                 const activeKey = kb.querySelector(`[data-idx="${activeKeyIdx}"]`);
-//                 if (activeKey) activeKey.classList.remove('active');
-//                 handleKeyRelease(activeKeyIdx);
-//                 startX = e.pageX - kbWrapper.offsetLeft;
-//                 scrollLeft = kbWrapper.scrollLeft;
-//                 activeKeyIdx = null; 
-//             }
-
-//             const x = e.pageX - kbWrapper.offsetLeft;
-//             const walk = (x - startX) * 0.6; 
-//             kbWrapper.scrollLeft = scrollLeft - walk;
-//         }
-//     });
-
-//     window.addEventListener('mouseup', () => {
-//         if (activeKeyIdx !== null) {
-//             const activeKey = kb.querySelector(`[data-idx="${activeKeyIdx}"]`);
-//             if (activeKey) activeKey.classList.remove('active');
-//             handleKeyRelease(activeKeyIdx);
-//         }
-//         isDown = false;
-//         activeKeyIdx = null;
-//         kbWrapper.classList.remove('grabbing');
-//     });
-
-//     setTimeout(() => {
-//         const targetKey = kb.querySelector('[data-idx="5"]');
-//         if (targetKey && kbWrapper) {
-//             kbWrapper.scrollLeft = targetKey.offsetLeft + 1;
-//         }
-//     }, 300);
-// }
-
 
 function initKeyboard() {
     const kb = document.getElementById('keyboard');
@@ -134,9 +60,8 @@ function initKeyboard() {
 
     kb.innerHTML = '';
 
-    let isDown = false;
-    let hasMoved = false; 
-    let startX, scrollLeft, mouseStartX, mouseStartY, activeKeyIdx = null;
+    let isDragging = false;
+    let startX, scrollLeft, mouseStartX, mouseStartY;
 
     for (let i = 0; i < 48; i++) {
         const k = document.createElement('div');
@@ -149,54 +74,49 @@ function initKeyboard() {
         kb.appendChild(k);
 
         k.onmousedown = e => {
-            isDown = true;
-            hasMoved = false; 
-            kbWrapper.classList.add('grabbing');
-            startX = e.pageX - kbWrapper.offsetLeft;
-            scrollLeft = kbWrapper.scrollLeft;
-            mouseStartX = e.clientX;
-            mouseStartY = e.clientY;
-            activeKeyIdx = i;
+            if (e.button === 0) {
+                k.classList.add('active');
+                const rect = k.getBoundingClientRect();
+                const velocity = ((e.clientY - rect.top) / rect.height) * 0.7 + 0.3;
+                handleKeyPress(i, velocity);
+            } else if (e.button === 2) {
+                isDragging = true;
+                kbWrapper.classList.add('grabbing');
+                startX = e.pageX - kbWrapper.offsetLeft;
+                scrollLeft = kbWrapper.scrollLeft;
+                mouseStartX = e.clientX;
+                mouseStartY = e.clientY;
+            }
+        };
 
-            k.classList.add('active');
-            const rect = k.getBoundingClientRect();
-            const velocity = ((e.clientY - rect.top) / rect.height) * 0.7 + 0.3;
-            handleKeyPress(i, velocity);
+        k.onmouseup = e => {
+            if (e.button === 0) {
+                k.classList.remove('active');
+                handleKeyRelease(i);
+            }
+        };
+
+        k.onmouseleave = () => {
+            if (k.classList.contains('active')) {
+                k.classList.remove('active');
+                handleKeyRelease(i);
+            }
         };
     }
 
     window.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
+        if (!isDragging) return;
 
-        const diffX = Math.abs(e.clientX - mouseStartX);
-        const diffY = Math.abs(e.clientY - mouseStartY);
-        
-        if (diffX > 10 || diffY > 10) {
-            if (!hasMoved && activeKeyIdx !== null) {
-                const activeKey = kb.querySelector(`[data-idx="${activeKeyIdx}"]`);
-                if (activeKey) activeKey.classList.remove('active');
-                handleKeyRelease(activeKeyIdx);
-                activeKeyIdx = null; 
-            }
-            
-            hasMoved = true; 
-
-            const x = e.pageX - kbWrapper.offsetLeft;
-            const walk = (x - startX) * 1.2; 
-            kbWrapper.scrollLeft = scrollLeft - walk;
-        }
+        const x = e.pageX - kbWrapper.offsetLeft;
+        const walk = (x - startX) * 1.2; 
+        kbWrapper.scrollLeft = scrollLeft - walk;
     });
 
-    window.addEventListener('mouseup', () => {
-        if (activeKeyIdx !== null) {
-            const activeKey = kb.querySelector(`[data-idx="${activeKeyIdx}"]`);
-            if (activeKey) activeKey.classList.remove('active');
-            handleKeyRelease(activeKeyIdx);
+    window.addEventListener('mouseup', (e) => {
+        if (e.button === 2) {
+            isDragging = false;
+            kbWrapper.classList.remove('grabbing');
         }
-        isDown = false;
-        hasMoved = false;
-        activeKeyIdx = null;
-        kbWrapper.classList.remove('grabbing');
     });
 
     kbWrapper.addEventListener('scroll', () => {
@@ -230,6 +150,7 @@ function initKeyboard() {
     }, 300);
 }
 
+
 function setupUIButtons() {
     const manualToggle = document.getElementById("manual-toggle");
     manualToggle?.addEventListener("change", e => {
@@ -260,7 +181,11 @@ function setupUIButtons() {
     });
 
     document.getElementById('vol')?.addEventListener("input", e => {
-        baseVol = parseFloat(e.target.value);
+    baseVol = parseFloat(e.target.value);
+    if (synth) {
+        const midiVol = Math.floor(baseVol * 127);
+        synth.controllerChange(0, 7, midiVol);
+    }
     });
     
     document.getElementById('sus')?.addEventListener("input", e => {
@@ -272,7 +197,7 @@ function setupUIButtons() {
     const midiVal = Math.floor(norm * 127);
     
     if (synth) synth.controllerChange(0, 72, midiVal);
-});
+    });
 
     document.getElementById('rev')?.addEventListener("input", e => {
         const val = parseFloat(e.target.value);
@@ -594,18 +519,26 @@ function toggleSustain(s){
 function loop() {
     if (isManual) {
         const targetFill = Math.min(100, reservoir + pumpCharge); 
-        reservoir += (targetFill - reservoir) * 0.075; 
+        
+        // Smoothed interpolation (reduced from 0.075 to 0.04 to stop jumpiness)
+        reservoir += (targetFill - reservoir) * 0.04; 
+        
         pumpCharge *= 0.95; 
         const drain = 0.02 + activeNotes.size * 0.03; 
         reservoir = Math.max(0, reservoir - drain);
+
+        if (synth) {
+            // Map reservoir (0-100) to Expression CC 11 (0-127)
+            const expressionVal = Math.floor((reservoir / 100) * 127);
+            const clampedExpression = Math.min(127, Math.max(0, expressionVal));
+            
+            synth.controllerChange(0, 11, clampedExpression);
+        }
     }
 
-    document.getElementById('air-fill').style.width = reservoir + "%";
-
-    let gainValue = isManual ? baseVol * (reservoir / 70) : baseVol;                     
-    
-    if (volumeNode) {
-        volumeNode.gain.value = Math.min(1, Math.max(0, gainValue));
+    const airFillEl = document.getElementById('air-fill');
+    if (airFillEl) {
+        airFillEl.style.width = reservoir + "%";
     }
 
     requestAnimationFrame(loop);
@@ -621,7 +554,6 @@ function drawVisualizer() {
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteTimeDomainData(dataArray);
 
-    // Initialize our smoothing array on the first run
     if (!smoothedDataArray || smoothedDataArray.length !== bufferLength) {
         smoothedDataArray = new Float32Array(bufferLength);
         for (let i = 0; i < bufferLength; i++) {
@@ -632,9 +564,8 @@ function drawVisualizer() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath(); 
     ctx.strokeStyle = "rgba(212,175,55,0.8)"; 
-    ctx.lineWidth = 1.5; // Slightly thicker line looks cleaner with anti-aliasing
+    ctx.lineWidth = 1.5; 
 
-    // The magic number (0.25) dictates how fast the wave catches up to the real sound.
     // Lower = smoother/slower. Higher = more reactive/jumpy.
     const smoothingFactor = 0.25; 
 
