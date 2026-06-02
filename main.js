@@ -53,7 +53,6 @@ let isStrictRaga = false;
 const ragaKeys = Object.keys(ragas);
 
 const canvas = document.getElementById('visualizer-canvas'), ctx = canvas.getContext('2d');
-
 function initKeyboard() {
     const kb = document.getElementById('keyboard');
     const kbWrapper = document.querySelector('.keyboard-wrapper');
@@ -76,7 +75,6 @@ function initKeyboard() {
 
         k.onmousedown = e => {
             if (e.button === 0) {
-                k.classList.add('active');
                 const rect = k.getBoundingClientRect();
                 const velocity = ((e.clientY - rect.top) / rect.height) * 0.7 + 0.3;
                 handleKeyPress(i, velocity);
@@ -92,16 +90,12 @@ function initKeyboard() {
 
         k.onmouseup = e => {
             if (e.button === 0) {
-                k.classList.remove('active');
                 handleKeyRelease(i);
             }
         };
 
         k.onmouseleave = () => {
-            if (k.classList.contains('active')) {
-                k.classList.remove('active');
-                handleKeyRelease(i);
-            }
+            handleKeyRelease(i);
         };
     }
 
@@ -310,6 +304,9 @@ function handleKeyPress(i, vel = 0.8) {
 
     if (isDroneMode && activeNotes.has(i)) {
         stopAudio(i);
+        // Clean visual state if explicitly toggled off during drone mode
+        const el = document.querySelector(`[data-idx="${i}"]`);
+        if (el) el.classList.remove('active');
         heldKeys.add(i); 
         heldKeys.delete(i); 
         return;
