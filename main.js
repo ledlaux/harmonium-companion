@@ -662,7 +662,7 @@ document.getElementById('start-btn').onclick = async () => {
     await audioCtx.audioWorklet.addModule(blobUrl);
     URL.revokeObjectURL(blobUrl);
     
-    const sfont = await (await fetch("./soundfont.sf2")).arrayBuffer();
+    const sfont = await (await fetch("./harmonium.sf2")).arrayBuffer();
     synth = new WorkletSynthesizer(audioCtx);
     await synth.soundBankManager.addSoundBank(sfont, "main");
     await synth.isReady;
