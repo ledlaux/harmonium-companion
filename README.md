@@ -27,6 +27,7 @@ Play in your browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-co
 | **Hold notes** | Shift key |
 | **Keyboard scroll** | Right click and drag |
 | **Filter notes** | Click raga name |
+| **Disable note labels** | Right click label switch |
 
 
 ---
