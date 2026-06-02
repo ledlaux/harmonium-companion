@@ -25,7 +25,7 @@ Play in your browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-co
 | **Play Notes** | Keyboard and MIDI |
 | **Pump Bellows** | Spacebar |
 | **Hold notes** | Shift key |
-| **Keyboard scroll** | Click and drag |
+| **Keyboard scroll** | Right click and drag |
 | **Filter notes** | Click raga name |
 
 
