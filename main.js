@@ -9,9 +9,10 @@ let octaveShift = 0,
     isCoupler = false,
     isSubOct = false,
     isSustain = false,
+    LabelsHidden = false,
     baseVol = 0.8,
     pumpCharge = 0;
-
+    
 let synth, audioCtx, volumeNode, analyser;
 
 const activeNotes = new Map(),
@@ -150,12 +151,10 @@ function initKeyboard() {
     }, 300);
 }
 
-
 function setupUIButtons() {
     const manualToggle = document.getElementById("manual-toggle");
     manualToggle?.addEventListener("change", e => {
         isManual = e.target.checked;
-        
         reservoir = isManual ? 0 : 100;
         document.getElementById('meter-ui').style.display = isManual ? 'block' : 'none';
         
@@ -167,6 +166,18 @@ function setupUIButtons() {
             }
         }
     });
+
+    const notationCheckbox = document.getElementById("notation-checkbox");
+    const notationContainer = notationCheckbox?.closest('.switch-group') || notationCheckbox;
+    
+    notationContainer?.addEventListener("contextmenu", e => {
+        e.preventDefault(); 
+        LabelsHidden = !LabelsHidden;
+        notationContainer.style.opacity = LabelsHidden ? "0.4" : "1";
+        toggleNotation();
+    });
+
+    notationCheckbox?.addEventListener("change", toggleNotation);
 
     document.getElementById("sub-oct-toggle")?.addEventListener("change", e => {
         isSubOct = e.target.checked;
@@ -190,22 +201,22 @@ function setupUIButtons() {
     });
 
     document.getElementById('vol')?.addEventListener("input", e => {
-    baseVol = parseFloat(e.target.value);
-    if (synth) {
-        const midiVol = Math.floor(baseVol * 127);
-        synth.controllerChange(0, 7, midiVol);
-    }
+        baseVol = parseFloat(e.target.value);
+        if (synth) {
+            const midiVol = Math.floor(baseVol * 127);
+            synth.controllerChange(0, 7, midiVol);
+        }
     });
     
     document.getElementById('sus')?.addEventListener("input", e => {
-    const val = parseFloat(e.target.value);
-    const minSliderVal = parseFloat(e.target.min) || 0.05;
-    const maxSliderVal = parseFloat(e.target.max) || 2;
-    
-    const norm = (val - minSliderVal) / (maxSliderVal - minSliderVal);
-    const midiVal = Math.floor(norm * 127);
-    
-    if (synth) synth.controllerChange(0, 72, midiVal);
+        const val = parseFloat(e.target.value);
+        const minSliderVal = parseFloat(e.target.min) || 0.05;
+        const maxSliderVal = parseFloat(e.target.max) || 2;
+        
+        const norm = (val - minSliderVal) / (maxSliderVal - minSliderVal);
+        const midiVal = Math.floor(norm * 127);
+        
+        if (synth) synth.controllerChange(0, 72, midiVal);
     });
 
     document.getElementById('rev')?.addEventListener("input", e => {
@@ -228,8 +239,6 @@ function setupUIButtons() {
         el.style.cursor = "pointer";
         el.addEventListener("click", () => setOctave(parseInt(el.dataset.octave)));
     });
-
-    document.getElementById("notation-checkbox")?.addEventListener("change", toggleNotation);
 
     document.querySelector(".stepper-left")?.addEventListener("click", () => cycleRaga(-1));
     document.querySelector(".stepper-right")?.addEventListener("click", () => cycleRaga(1));
@@ -430,12 +439,17 @@ function toggleNotation() {
     const isIndian = checkbox ? checkbox.checked : false;
 
     document.querySelectorAll('.key').forEach(k => {
+        const noteTxt = k.querySelector('.note-txt');
+        if (!noteTxt) return; 
+
+        if (LabelsHidden) {
+            noteTxt.innerHTML = '';
+            return;
+        }
+
         const i = parseInt(k.dataset.idx);
         let labelIdx = (i - transposeShift) % 12;
         while (labelIdx < 0) labelIdx += 12;
-
-        const noteTxt = k.querySelector('.note-txt');
-        if (!noteTxt) return; 
 
         if (isIndian) {
             let sargam = indianScale[labelIdx];
@@ -463,7 +477,7 @@ function toggleNotation() {
         } else {
             const noteName = scale[labelIdx];
             let physicalOctave = Math.floor(i / 12) + 2;
-            let currentOctave = physicalOctave // + octaveShift;
+            let currentOctave = physicalOctave;
 
             if (noteName === "C") {
                 noteTxt.innerHTML = `${noteName}<span class="octave-num">${currentOctave}</span>`;
@@ -525,12 +539,10 @@ function toggleSustain(s){
     }
 }
 
-
 function loop() {
     if (isManual) {
         const targetFill = Math.min(100, reservoir + pumpCharge); 
         
-        // Smoothed interpolation (reduced from 0.075 to 0.04 to stop jumpiness)
         reservoir += (targetFill - reservoir) * 0.04; 
         
         pumpCharge *= 0.95; 
@@ -564,7 +576,6 @@ function drawVisualizer() {
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteTimeDomainData(dataArray);
 
-    // Initialize our smoothing array on the first run
     if (!smoothedDataArray || smoothedDataArray.length !== bufferLength) {
         smoothedDataArray = new Float32Array(bufferLength);
         for (let i = 0; i < bufferLength; i++) {
@@ -575,14 +586,12 @@ function drawVisualizer() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath(); 
     ctx.strokeStyle = "rgba(212,175,55,0.8)"; 
-    ctx.lineWidth = 1.5; // Slightly thicker line looks cleaner with anti-aliasing
+    ctx.lineWidth = 1.5; 
 
-    // The magic number (0.25) dictates how fast the wave catches up to the real sound.
     // Lower = smoother/slower. Higher = more reactive/jumpy.
     const smoothingFactor = 0.25; 
 
     for (let i = 0; i < bufferLength; i++) {
-        // Blend a fraction of the new frame data with the previous frame data
         smoothedDataArray[i] += (dataArray[i] - smoothedDataArray[i]) * smoothingFactor;
 
         const v = smoothedDataArray[i] / 128.0;
