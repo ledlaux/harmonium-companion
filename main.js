@@ -155,8 +155,17 @@ function setupUIButtons() {
     const manualToggle = document.getElementById("manual-toggle");
     manualToggle?.addEventListener("change", e => {
         isManual = e.target.checked;
+        
         reservoir = isManual ? 0 : 100;
         document.getElementById('meter-ui').style.display = isManual ? 'block' : 'none';
+        
+        if (synth) {
+            if (!isManual) {
+                synth.controllerChange(0, 11, 127);
+            } else {
+                synth.controllerChange(0, 11, 0);
+            }
+        }
     });
 
     document.getElementById("sub-oct-toggle")?.addEventListener("change", e => {
@@ -516,6 +525,7 @@ function toggleSustain(s){
     }
 }
 
+
 function loop() {
     if (isManual) {
         const targetFill = Math.min(100, reservoir + pumpCharge); 
@@ -528,7 +538,7 @@ function loop() {
         reservoir = Math.max(0, reservoir - drain);
 
         if (synth) {
-            // Map reservoir (0-100) to Expression CC 11 (0-127)
+            // Map reservoir (0-100) directly to Expression CC 11 (0-127)
             const expressionVal = Math.floor((reservoir / 100) * 127);
             const clampedExpression = Math.min(127, Math.max(0, expressionVal));
             
@@ -554,6 +564,7 @@ function drawVisualizer() {
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteTimeDomainData(dataArray);
 
+    // Initialize our smoothing array on the first run
     if (!smoothedDataArray || smoothedDataArray.length !== bufferLength) {
         smoothedDataArray = new Float32Array(bufferLength);
         for (let i = 0; i < bufferLength; i++) {
@@ -564,8 +575,9 @@ function drawVisualizer() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath(); 
     ctx.strokeStyle = "rgba(212,175,55,0.8)"; 
-    ctx.lineWidth = 1.5; 
+    ctx.lineWidth = 1.5; // Slightly thicker line looks cleaner with anti-aliasing
 
+    // The magic number (0.25) dictates how fast the wave catches up to the real sound.
     // Lower = smoother/slower. Higher = more reactive/jumpy.
     const smoothingFactor = 0.25; 
 
