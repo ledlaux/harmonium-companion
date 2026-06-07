@@ -2,9 +2,7 @@
 
 Play in your browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-companion/)  
 
-![](https://github.com/ledlaux/harmonium-companion/blob/main/images/harmonium-companion.jpg
-)
-
+![Harmonium Companion](images/harmonium-companion.jpg)
 ---
 
 ## 🛠 Features
