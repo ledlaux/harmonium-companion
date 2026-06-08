@@ -10,6 +10,7 @@ Play in your browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-co
 * **Learn Ragas**: Color-coded highlighting and note filtering for 12+ Indian Ragas (Morning, Evening, Night).
 * **Dual Notation**: Toggle between Sargam (Sa, Re, Ga) and Western notation.
 * **Octave Coupler**: Includes Sub-Octave and Coupler modes for richer textures.
+* **Drone Mode**: continues note holding. 
 * **Effects**: Adjustable Chorus and Reverb to experiment with acoustics.
 * **MIDI Support**: WebMIDI plug-and-play.
 
