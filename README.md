@@ -39,6 +39,4 @@ Play in the browser 🎹 — [Live Demo](https://ledlaux.github.io/harmonium-com
 
 ## 📜 License
 
-Copyright © 2026 Vadims Maksimovs
-
 This project is licensed under the MIT License. See the LICENSE file for details.
