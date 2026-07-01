@@ -53,6 +53,7 @@ let isStrictRaga = false;
 const ragaKeys = Object.keys(ragas);
 
 const canvas = document.getElementById('visualizer-canvas'), ctx = canvas.getContext('2d');
+
 function initKeyboard() {
     const kb = document.getElementById('keyboard');
     const kbWrapper = document.querySelector('.keyboard-wrapper');
@@ -115,24 +116,29 @@ function initKeyboard() {
     });
 
     kbWrapper.addEventListener('scroll', () => {
-        const maxScroll = kbWrapper.scrollWidth - kbWrapper.clientWidth;
-        if (maxScroll <= 0) return;
+        const viewCenter = kbWrapper.scrollLeft + (kbWrapper.clientWidth / 2);
+        const totalKeys = 48;
+        const approxKeyWidth = kbWrapper.scrollWidth / totalKeys;
+        const keyIndexAtCenter = Math.floor(viewCenter / approxKeyWidth);
+        const physicalOctaveAtCenter = Math.floor(keyIndexAtCenter / 12) + 2;
 
-        const scrollRatio = kbWrapper.scrollLeft / maxScroll;
-        let targetOctave = 0;
+        let targetOctave = 0; 
+        let targetId = "oct-mid";
 
-        if (scrollRatio < 0.33) {
+        if (physicalOctaveAtCenter <= 2) {
             targetOctave = -1;
-        } else if (scrollRatio > 0.66) {
+            targetId = "oct-low";
+        } else if (physicalOctaveAtCenter >= 4) {
             targetOctave = 1;
+            targetId = "oct-high";
+        }
+
+        if (octaveShift !== targetOctave) {
+            octaveShift = targetOctave;
+            toggleNotation();
         }
 
         document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
-        
-        let targetId = "oct-mid";
-        if (targetOctave === -1) targetId = "oct-low";
-        if (targetOctave === 1) targetId = "oct-high";
-
         const led = document.getElementById(targetId);
         if (led) led.classList.add('active');
     });
@@ -141,6 +147,10 @@ function initKeyboard() {
         const targetKey = kb.querySelector('[data-idx="5"]');
         if (targetKey && kbWrapper) {
             kbWrapper.scrollLeft = targetKey.offsetLeft + 1;
+            octaveShift = 0;
+            toggleNotation();
+            document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
+            document.getElementById("oct-mid")?.classList.add('active');
         }
     }, 300);
 }
@@ -278,7 +288,7 @@ function handleMidiMessage(event) {
     const isNoteOn = (status & 0xf0) === 0x90;
     const isNoteOff = ((status & 0xf0) === 0x80) || (isNoteOn && velocity === 0);
     const vel = velocity / 127;
-    const harmoniumIdx = note - 48; 
+    const harmoniumIdx = note - 36; 
 
     if (isNoteOn && vel > 0) {
         handleKeyPress(harmoniumIdx, vel);
@@ -304,7 +314,6 @@ function handleKeyPress(i, vel = 0.8) {
 
     if (isDroneMode && activeNotes.has(i)) {
         stopAudio(i);
-        // Clean visual state if explicitly toggled off during drone mode
         const el = document.querySelector(`[data-idx="${i}"]`);
         if (el) el.classList.remove('active');
         heldKeys.add(i); 
@@ -332,19 +341,18 @@ function handleKeyRelease(i) {
 function startAudio(i, vel = 0.8) {
     if (activeNotes.has(i) || !synth) return;
 
-    const baseMidi = 48 + i; 
-    const totalShift = transposeShift + octaveShift * 12;
-    const targetMidi = baseMidi + totalShift;
+    const baseMidi = 36 + i; 
+    const targetMidi = baseMidi + transposeShift;
     const midiVelocity = Math.floor(vel * 127);
 
     synth.noteOn(0, targetMidi, midiVelocity);
 
     if (isCoupler) {
-        synth.noteOn(0, targetMidi + 12, Math.floor(midiVelocity * 0.5));
+        synth.noteOn(0, targetMidi + 12, midiVelocity);
     }
 
     if (isSubOct) {
-        synth.noteOn(0, targetMidi - 12, Math.floor(midiVelocity * 0.5));
+        synth.noteOn(0, targetMidi - 12, midiVelocity);
     }
 
     activeNotes.set(i, { 
@@ -388,7 +396,7 @@ function refreshAudio(forceRestart = false) {
             const midiVelocity = Math.floor(d.vel * 127);
 
             if (isCoupler && !d.couplerActive) {
-                synth.noteOn(0, d.playedMidi + 12, Math.floor(midiVelocity * 0.5));
+                synth.noteOn(0, d.playedMidi + 12, midiVelocity);
                 d.couplerActive = true;
             } else if (!isCoupler && d.couplerActive) {
                 synth.noteOff(0, d.playedMidi + 12);
@@ -396,7 +404,7 @@ function refreshAudio(forceRestart = false) {
             }
 
             if (isSubOct && !d.subOctActive) {
-                synth.noteOn(0, d.playedMidi - 12, Math.floor(midiVelocity * 0.5));
+                synth.noteOn(0, d.playedMidi - 12, midiVelocity);
                 d.subOctActive = true;
             } else if (!isSubOct && d.subOctActive) {
                 synth.noteOff(0, d.playedMidi - 12);
@@ -417,18 +425,30 @@ function setTranspose(dir) {
 }
 
 function setOctave(v) {
+    const kbWrapper = document.querySelector('.keyboard-wrapper');
+    const kb = document.getElementById('keyboard');
+    if (!kb || !kbWrapper) return;
+
     octaveShift = v;
+
+    let targetIdx = 17; 
+    if (v === -1) targetIdx = 5;
+    if (v === 1) targetIdx = 29;
+
+    const targetKey = kb.querySelector(`[data-idx="${targetIdx}"]`);
+    if (targetKey) {
+        kbWrapper.scrollLeft = targetKey.offsetLeft - (kbWrapper.clientWidth / 2) + (targetKey.clientWidth / 2);
+    }
+
     document.querySelectorAll('.oct-led').forEach(l => l.classList.remove('active'));
-    let targetId = "";
+    let targetId = "oct-mid";
     if (v === -1) targetId = "oct-low";
-    else if (v === 0) targetId = "oct-mid";
-    else if (v === 1) targetId = "oct-high";
+    if (v === 1) targetId = "oct-high";
 
     const led = document.getElementById(targetId);
     if (led) led.classList.add('active');
     
     toggleNotation();
-    refreshAudio(true);
 }
 
 function toggleNotation() {
@@ -450,8 +470,8 @@ function toggleNotation() {
 
         if (isIndian) {
             let sargam = indianScale[labelIdx];
-            let keyOctave = Math.floor((i + transposeShift) / 12);
-            let totalOctave = keyOctave + octaveShift;
+            let keyOctave = Math.floor((i + transposeShift) / 12) + 2;
+            let displayOctaveOffset = keyOctave - 3;
             let finalHTML = sargam;
 
             if (sargam === sargam.toLowerCase() && !["Sa", "Pa", "ma"].includes(sargam)) {
@@ -460,13 +480,13 @@ function toggleNotation() {
                 finalHTML = `<span class="teevra">${sargam}</span>`;
             }
 
-            if (totalOctave <= -2) {
+            if (displayOctaveOffset <= -2) {
                 noteTxt.innerHTML = `<span class="double-dot-below">${finalHTML}</span>`;
-            } else if (totalOctave === -1) {
+            } else if (displayOctaveOffset === -1) {
                 noteTxt.innerHTML = `<span class="dot-below">${finalHTML}</span>`;
-            } else if (totalOctave === 1) {
+            } else if (displayOctaveOffset === 1) {
                 noteTxt.innerHTML = `<span class="dot-above">${finalHTML}</span>`;
-            } else if (totalOctave >= 2) {
+            } else if (displayOctaveOffset >= 2) {
                 noteTxt.innerHTML = `<span class="double-dot-above">${finalHTML}</span>`;
             } else {
                 noteTxt.innerHTML = finalHTML;
@@ -474,10 +494,9 @@ function toggleNotation() {
         } else {
             const noteName = scale[labelIdx];
             let physicalOctave = Math.floor(i / 12) + 2;
-            let currentOctave = physicalOctave;
 
             if (noteName === "C") {
-                noteTxt.innerHTML = `${noteName}<span class="octave-num">${currentOctave}</span>`;
+                noteTxt.innerHTML = `${noteName}<span class="octave-num">${physicalOctave}</span>`;
             } else {
                 noteTxt.innerText = noteName;
             }
@@ -539,18 +558,14 @@ function toggleSustain(s){
 function loop() {
     if (isManual) {
         const targetFill = Math.min(100, reservoir + pumpCharge); 
-        
         reservoir += (targetFill - reservoir) * 0.04; 
-        
         pumpCharge *= 0.95; 
         const drain = 0.02 + activeNotes.size * 0.03; 
         reservoir = Math.max(0, reservoir - drain);
 
         if (synth) {
-            // Map reservoir (0-100) directly to Expression CC 11 (0-127)
             const expressionVal = Math.floor((reservoir / 100) * 127);
             const clampedExpression = Math.min(127, Math.max(0, expressionVal));
-            
             synth.controllerChange(0, 11, clampedExpression);
         }
     }
@@ -585,7 +600,6 @@ function drawVisualizer() {
     ctx.strokeStyle = "rgba(212,175,55,0.8)"; 
     ctx.lineWidth = 1.5; 
 
-    // Lower = smoother/slower. Higher = more reactive/jumpy.
     const smoothingFactor = 0.25; 
 
     for (let i = 0; i < bufferLength; i++) {
