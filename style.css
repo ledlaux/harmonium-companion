@@ -663,7 +663,7 @@ margin-left: -15px;
 margin-right: -15px;
 z-index: 2;
 background: var(--black-key);
-border-radius: 6px 6px 4px 4px;š
+border-radius: 6px 6px 4px 4px;
 box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.5);
 }
 .key.highlight-y::after,
